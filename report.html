@@ -23,6 +23,52 @@
     padding: 20px;
   }
   .container { max-width: 960px; margin: 0 auto; }
+
+  /* Loading overlay */
+  #loadingOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #loadingOverlay .spinner {
+    width: 48px; height: 48px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loadingOverlay h2 {
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  #loadingOverlay p {
+    font-size: 14px;
+    color: var(--text-light);
+  }
+  #loadingOverlay .loading-dots::after {
+    content: '';
+    animation: dots 1.5s steps(4, end) infinite;
+  }
+  @keyframes dots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+  }
+
+  /* Report content (hidden until ready) */
+  #reportContent {
+    display: none;
+  }
+
   header {
     text-align: center;
     padding: 40px 20px;
@@ -140,72 +186,18 @@
     text-decoration: none;
     margin: 0 4px;
   }
-  .btn-outline {
-    background: white;
-    color: var(--primary);
-    border: 2px solid var(--primary);
-  }
 
-  /* Kimi API 面板 */
-  .api-panel {
-    background: linear-gradient(135deg, #fdf4ff, #f0f9ff);
-    border: 1px solid #c4b5fd;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
-    text-align: center;
-  }
-  .api-panel h3 { font-size: 16px; margin-bottom: 8px; color: #6b21a8; }
-  .api-panel p { font-size: 12px; color: var(--text-light); margin-bottom: 12px; }
-  .api-panel input {
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 13px;
-    width: 100%;
-    max-width: 400px;
-    font-family: inherit;
-  }
-  .api-panel .api-row {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 8px;
-  }
-  .api-panel .btn {
-    padding: 8px 20px;
-    font-size: 13px;
-  }
-
-  /* AI 分析输出区 */
-  .ai-output {
+  .deep-analysis {
     white-space: pre-wrap;
     font-size: 14px;
     line-height: 1.8;
     color: var(--text);
   }
-  .ai-output h3 { font-size: 16px; color: #6b21a8; margin-top: 16px; margin-bottom: 8px; }
-  .ai-output p { margin-bottom: 10px; }
-  .ai-output ul { margin-left: 20px; margin-bottom: 10px; }
-  .ai-output li { margin-bottom: 4px; }
-  .ai-output strong { color: #5b21b6; }
-
-  .loading-dots::after {
-    content: '';
-    animation: dots 1.5s steps(4, end) infinite;
-  }
-  @keyframes dots {
-    0% { content: ''; }
-    25% { content: '.'; }
-    50% { content: '..'; }
-    75% { content: '...'; }
-  }
-  .status-msg {
-    font-size: 12px;
-    color: var(--text-light);
-    margin-top: 8px;
-  }
+  .deep-analysis h3 { font-size: 16px; color: #5b21b6; margin-top: 16px; margin-bottom: 8px; }
+  .deep-analysis p { margin-bottom: 10px; }
+  .deep-analysis ul { margin-left: 20px; margin-bottom: 10px; }
+  .deep-analysis li { margin-bottom: 4px; }
+  .deep-analysis strong { color: #5b21b6; }
 
   @media (max-width: 600px) {
     header h1 { font-size: 22px; }
@@ -214,7 +206,16 @@
 </style>
 </head>
 <body>
-<div class="container">
+
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <h2>正在生成深度分析报告</h2>
+  <p><span class="loading-dots">请稍候</span></p>
+</div>
+
+<!-- Full report (hidden until analysis ready) -->
+<div class="container" id="reportContent">
   <header>
     <h1>自我分化问卷（DSI）分析报告</h1>
     <p>Differentiation of Self Inventory · <span id="reportDate"></span></p>
@@ -223,12 +224,6 @@
   <div class="btn-row">
     <a class="btn" href="index.html">重新测试</a>
     <button class="btn" onclick="window.print()">打印报告</button>
-  </div>
-
-  <!-- AI 分析状态 -->
-  <div class="api-panel" id="apiPanel">
-    <h3>🤖 AI 个性化深度分析</h3>
-    <div class="status-msg" id="apiStatus"><span class="loading-dots">Kimi 正在生成分析报告</span></div>
   </div>
 
   <div class="section" style="text-align:center;">
@@ -278,10 +273,9 @@
     <div id="dimAnalysis"></div>
   </div>
 
-  <!-- AI 分析结果区 -->
-  <div class="section" id="aiSection" style="display:none;">
-    <h2><span class="icon">🤖</span>AI 个性化深度分析（Kimi）</h2>
-    <div class="ai-output" id="aiOutput"></div>
+  <div class="section" id="deepSection">
+    <h2><span class="icon">✨</span>个性化深度解读</h2>
+    <div class="deep-analysis" id="deepOutput"></div>
   </div>
 
   <div class="section">
@@ -323,8 +317,8 @@ function getLevel(pct, lowGood) {
   }
 }
 
-/* ================= Kimi API 功能 ================= */
-const KIMI_API_KEY = 'sk-J5yGODxsbryrE3Zn7gDuIPGTj1Hw7vdFsTeKhqH6xV47PSiG';
+/* ================= Deep Analysis API ================= */
+const API_KEY = 'sk-J5yGODxsbryrE3Zn7gDuIPGTj1Hw7vdFsTeKhqH6xV47PSiG';
 
 function getPrompt(scores, totalScore, totalLevel) {
   const dimTexts = scores.map((s, i) => {
@@ -377,27 +371,19 @@ ${dimTexts}
 总字数控制在 1000-1500 字。语气要像一位经验丰富的心理咨询师在对来访者说话，温暖、尊重、不带评判。`;
 }
 
-async function generateAIAnalysis() {
-  const status = document.getElementById('apiStatus');
-  const aiSection = document.getElementById('aiSection');
-  const aiOutput = document.getElementById('aiOutput');
-
-  aiSection.style.display = 'block';
-  aiOutput.innerHTML = '<span class="loading-dots">Kimi 正在生成分析报告</span>';
-  aiOutput.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
+async function fetchDeepAnalysis(scores, totalScore, totalLevel) {
   try {
     const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + KIMI_API_KEY
+        'Authorization': 'Bearer ' + API_KEY
       },
       body: JSON.stringify({
         model: 'kimi-k2.6',
         messages: [
           { role: 'system', content: '你是一位专业心理咨询师，精通 Bowen 家庭系统理论。输出使用 Markdown 格式。' },
-          { role: 'user', content: getPrompt(scoresData, totalScoreData, totalLevelData) }
+          { role: 'user', content: getPrompt(scores, totalScore, totalLevel) }
         ],
         temperature: 1,
         max_tokens: 2048,
@@ -411,24 +397,14 @@ async function generateAIAnalysis() {
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-
-    // Simple Markdown to HTML
-    aiOutput.innerHTML = markdownToHtml(content);
-    status.textContent = '✅ AI 分析已完成';
+    return data.choices?.[0]?.message?.content || '';
 
   } catch (err) {
-    let detail = err.message;
-    if (err.name === 'TypeError' && err.message.includes('fetch')) {
-      detail = '网络或跨域(CORS)错误。GitHub Pages 可能无法直接访问 Moonshot API，建议下载到本地用浏览器打开，或使用后端代理。';
-    }
-    aiOutput.innerHTML = '<p style="color:#991b1b;"><strong>生成失败</strong></p><p style="color:#991b1b;font-size:12px;">' + escapeHtml(detail) + '</p>';
-    status.textContent = '❌ 分析失败，已展示基础报告';
-    console.error('Kimi API Error:', err);
+    console.error('Deep analysis API error:', err);
+    return null;
   }
 }
 
-// Minimal Markdown to HTML converter
 function markdownToHtml(md) {
   return md
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -443,45 +419,16 @@ function markdownToHtml(md) {
     .replace(/\n/g, '<br>');
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-/* ================= 原有报告逻辑 ================= */
-let scoresData = [];
-let totalScoreData = 0;
-let totalLevelData = '';
-
-function render() {
-  const raw = localStorage.getItem('dsi_scores');
-  if (!raw) {
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;"><h2>暂无数据</h2><p>请先完成测试。</p><a class="btn" href="index.html">前往测试</a></div>';
-    return;
-  }
-  const scores = JSON.parse(raw);
-  scoresData = scores;
-  const dateStr = localStorage.getItem('dsi_date');
-  const date = dateStr ? new Date(dateStr).toLocaleDateString('zh-CN') : new Date().toLocaleDateString('zh-CN');
+/* ================= Report Rendering ================= */
+function renderReport(scores, totalScore, totalLevel, date, deepContent) {
   document.getElementById('reportDate').textContent = date;
   document.getElementById('footerDate').textContent = date;
+  document.getElementById('totalScore').textContent = totalScore;
+  document.getElementById('totalLevel').textContent = totalLevel;
 
-  const totalScore = scores.reduce((s, d) => s + d.score, 0);
-  totalScoreData = totalScore;
+  // Ring
   const totalMax = FULL_SCORES.reduce((s, v) => s + v, 0);
   const totalPct = totalScore / totalMax;
-
-  document.getElementById('totalScore').textContent = totalScore;
-
-  let totalLevelText = '';
-  if (totalPct <= 0.45) totalLevelText = '良好';
-  else if (totalPct <= 0.55) totalLevelText = '中等';
-  else totalLevelText = '偏低';
-  totalLevelData = totalLevelText;
-  document.getElementById('totalLevel').textContent = totalLevelText;
-
-  // Ring animation
   const circumference = 2 * Math.PI * 60;
   const offset = circumference * (1 - totalPct);
   setTimeout(() => {
@@ -490,8 +437,7 @@ function render() {
   }, 100);
 
   // Score cards
-  const board = document.getElementById('scoreBoard');
-  board.innerHTML = scores.map((s, i) => {
+  document.getElementById('scoreBoard').innerHTML = scores.map((s, i) => {
     const info = DIM_INFO[i];
     const pct = (s.score / info.full * 100).toFixed(1);
     const lvl = getLevel(parseFloat(pct), info.lowGood);
@@ -504,9 +450,8 @@ function render() {
       </div>`;
   }).join('');
 
-  // Detail table
-  const tbody = document.getElementById('detailTable');
-  tbody.innerHTML = scores.map((s, i) => {
+  // Table
+  document.getElementById('detailTable').innerHTML = scores.map((s, i) => {
     const info = DIM_INFO[i];
     const pct = (s.score / info.full * 100).toFixed(1);
     const lvl = getLevel(parseFloat(pct), info.lowGood);
@@ -521,14 +466,13 @@ function render() {
   }).join('');
 
   // Dim analysis
-  const analysisDiv = document.getElementById('dimAnalysis');
   const analysisTexts = [
-    `你在情绪反应维度处于<strong>${getLevel(scores[0].score/60*100, true).label}</strong>水平。大多数情况下你能够保持情绪稳定，但在面对亲近的人或重要冲突时，情绪仍可能占据上风，影响理性判断。你并非高度情绪化的人，但偶尔会被批评或人际摩擦所困扰。`,
-    `你在亲密关系中倾向于保持一定的情感距离。当他人过于接近时，你会感到不舒服，甚至产生逃避的冲动。你重视个人空间，担心在关系中失去独立性。这可能是一种自我保护机制，但也可能影响深度亲密关系的建立。`,
-    `你的核心自我处于<strong>${getLevel(scores[2].score/60*100, false).label}</strong>水平。在压力下，你尚能保持一定的冷静和自我认知，但在"做自己认为正确的事"、"不受他人评价影响"以及"对他人说不"方面仍有提升空间。你对自我价值的认同感需要进一步巩固。`,
-    `你在人际融合维度得分<strong>${getLevel(scores[3].score/54*100, true).label}</strong>，说明你对家庭关系和亲密关系投入较深。你仍然较依附于父母，对家庭冲突敏感，会频繁考虑与家人的关系。虽然这体现了你对关系的重视，但也意味着你的情绪容易受到家庭系统的牵动。`
+    `你在情绪反应维度处于<strong>${getLevel(scores[0].score/60*100, true).label}</strong>水平。大多数情况下你能够保持情绪稳定，但在面对亲近的人或重要冲突时，情绪仍可能占据上风，影响理性判断。`,
+    `你在亲密关系中倾向于保持一定的情感距离。当他人过于接近时，你会感到不舒服，甚至产生逃避的冲动。你重视个人空间，担心在关系中失去独立性。`,
+    `你的核心自我处于<strong>${getLevel(scores[2].score/60*100, false).label}</strong>水平。在压力下，你尚能保持一定的冷静和自我认知，但在坚持自我、不受他人评价影响方面仍有提升空间。`,
+    `你在人际融合维度得分<strong>${getLevel(scores[3].score/54*100, true).label}</strong>，说明你对家庭关系和亲密关系投入较深。你的情绪容易受到家庭系统的牵动。`
   ];
-  analysisDiv.innerHTML = scores.map((s, i) => {
+  document.getElementById('dimAnalysis').innerHTML = scores.map((s, i) => {
     const info = DIM_INFO[i];
     const pct = (s.score / info.full * 100).toFixed(1);
     return `
@@ -539,12 +483,18 @@ function render() {
       </div>`;
   }).join('');
 
+  // Deep analysis
+  if (deepContent) {
+    document.getElementById('deepOutput').innerHTML = markdownToHtml(deepContent);
+  } else {
+    document.getElementById('deepSection').style.display = 'none';
+  }
+
   // Comprehensive
-  const compDiv = document.getElementById('comprehensive');
-  compDiv.innerHTML = `
+  document.getElementById('comprehensive').innerHTML = `
     <div class="analysis-box">
       <h4>整体画像</h4>
-      <p>你的自我分化水平处于<strong>${totalLevelText}</strong>。你并非情绪高度失控的人，但在亲密关系中同时存在"想要靠近又想要逃离"的矛盾感受——既担心失去独立性（情感切断偏高），又难以真正从家庭中分离（人际融合偏高）。核心自我的不够稳固，使你在面对外界压力时容易摇摆。</p>
+      <p>你的自我分化水平处于<strong>${totalLevel}</strong>。你并非情绪高度失控的人，但在亲密关系中同时存在"想要靠近又想要逃离"的矛盾感受——既担心失去独立性（情感切断偏高），又难以真正从家庭中分离（人际融合偏高）。</p>
     </div>
     <div class="analysis-box">
       <h4>优势领域</h4>
@@ -556,34 +506,32 @@ function render() {
     <div class="analysis-box">
       <h4>成长建议</h4>
       <ul>
-        <li><strong>巩固核心自我：</strong>练习在压力情境下坚持自己的观点，逐步建立"即使别人不赞同，我也知道自己是谁"的内在稳定感。</li>
-        <li><strong>平衡亲密与独立：</strong>情感切断和人际融合同时偏高，说明你在"靠近-逃离"之间摇摆。尝试在关系中既保持自我边界，又不完全切断情感连接。</li>
-        <li><strong>降低家庭情绪卷入：</strong>当家庭冲突发生时，有意识地做一个观察者而非参与者，区分"他人的情绪"和"自己的情绪"。</li>
-        <li><strong>练习表达真实感受：</strong>在安全的亲密关系中，尝试表达真实情感而非疏远或压抑，逐步体验"表达≠失去自我"。</li>
+        <li><strong>巩固核心自我：</strong>练习在压力情境下坚持自己的观点，逐步建立内在稳定感。</li>
+        <li><strong>平衡亲密与独立：</strong>尝试在关系中既保持自我边界，又不完全切断情感连接。</li>
+        <li><strong>降低家庭情绪卷入：</strong>当家庭冲突发生时，有意识地做观察者而非参与者。</li>
+        <li><strong>练习表达真实感受：</strong>在安全的亲密关系中，尝试表达真实情感而非疏远或压抑。</li>
       </ul>
     </div>
   `;
 
-  // Radar chart
+  // Radar
   const ctx = document.getElementById('radarChart').getContext('2d');
-  const erHealth = 100 - (scores[0].score / 60 * 100);
-  const ecHealth = 100 - (scores[1].score / 72 * 100);
-  const ipHealth = (scores[2].score / 60 * 100);
-  const foHealth = 100 - (scores[3].score / 54 * 100);
-
   new Chart(ctx, {
     type: 'radar',
     data: {
       labels: ['情绪反应\n(越低越好)', '情感切断\n(越低越好)', '核心自我\n(越高越好)', '人际融合\n(越低越好)'],
       datasets: [{
         label: '健康度指数',
-        data: [erHealth, ecHealth, ipHealth, foHealth],
+        data: [
+          100 - (scores[0].score / 60 * 100),
+          100 - (scores[1].score / 72 * 100),
+          (scores[2].score / 60 * 100),
+          100 - (scores[3].score / 54 * 100)
+        ],
         backgroundColor: 'rgba(102, 126, 234, 0.2)',
         borderColor: '#667eea',
         pointBackgroundColor: '#667eea',
         pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: '#667eea',
         borderWidth: 2,
         pointRadius: 4
       }]
@@ -592,30 +540,48 @@ function render() {
       responsive: true,
       scales: {
         r: {
-          beginAtZero: true,
-          max: 100,
+          beginAtZero: true, max: 100,
           ticks: { stepSize: 20, font: { size: 10 } },
           pointLabels: { font: { size: 12, family: 'Microsoft YaHei' } }
         }
       },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return '健康度: ' + context.raw.toFixed(1) + '%';
-            }
-          }
-        }
+        tooltip: { callbacks: { label: c => '健康度: ' + c.raw.toFixed(1) + '%' } }
       }
     }
   });
-
-  // Auto-generate AI analysis on page load
-  generateAIAnalysis();
 }
 
-render();
+/* ================= Main Flow ================= */
+async function main() {
+  const raw = localStorage.getItem('dsi_scores');
+  if (!raw) {
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;"><h2>暂无数据</h2><p>请先完成测试。</p><a class="btn" href="index.html">前往测试</a></div>';
+    return;
+  }
+
+  const scores = JSON.parse(raw);
+  const dateStr = localStorage.getItem('dsi_date');
+  const date = dateStr ? new Date(dateStr).toLocaleDateString('zh-CN') : new Date().toLocaleDateString('zh-CN');
+
+  const totalScore = scores.reduce((s, d) => s + d.score, 0);
+  const totalMax = FULL_SCORES.reduce((s, v) => s + v, 0);
+  const totalPct = totalScore / totalMax;
+  const totalLevel = totalPct <= 0.45 ? '良好' : totalPct <= 0.55 ? '中等' : '偏低';
+
+  // Fetch deep analysis first (while showing loading)
+  const deepContent = await fetchDeepAnalysis(scores, totalScore, totalLevel);
+
+  // Hide loading, show report
+  document.getElementById('loadingOverlay').style.display = 'none';
+  document.getElementById('reportContent').style.display = 'block';
+
+  // Render everything at once
+  renderReport(scores, totalScore, totalLevel, date, deepContent);
+}
+
+main();
 </script>
 </body>
 </html>
