@@ -305,15 +305,23 @@ const DIM_INFO = [
   { key: 'fo', name: '人际融合', full: 54, desc: 'Fusion with Others', lowGood: true },
 ];
 
-function getLevel(pct, lowGood) {
+// 返回直观标签：用维度特征描述替代"偏高/偏低"，避免用户误解高分=优秀
+function getLevel(pct, lowGood, dimKey) {
+  const labels = {
+    er: { low: '情绪较稳定', mid: '情绪反应中等', high: '情绪反应较强' },
+    ec: { low: '情感连接较好', mid: '情感距离中等', high: '情感距离较大' },
+    ip: { low: '核心自我待提升', mid: '核心自我中等', high: '核心自我较强' },
+    fo: { low: '人际边界清晰', mid: '人际融合中等', high: '人际融合较强' }
+  };
+  const map = labels[dimKey] || labels.er;
   if (lowGood) {
-    if (pct <= 35) return { label: '良好', cls: 'tag-green' };
-    if (pct <= 55) return { label: '中等', cls: 'tag-yellow' };
-    return { label: '偏高', cls: 'tag-red' };
+    if (pct <= 35) return { label: map.low, cls: 'tag-green' };
+    if (pct <= 55) return { label: map.mid, cls: 'tag-yellow' };
+    return { label: map.high, cls: 'tag-red' };
   } else {
-    if (pct >= 65) return { label: '良好', cls: 'tag-green' };
-    if (pct >= 45) return { label: '中等', cls: 'tag-yellow' };
-    return { label: '偏低', cls: 'tag-red' };
+    if (pct >= 65) return { label: map.high, cls: 'tag-green' };
+    if (pct >= 45) return { label: map.mid, cls: 'tag-yellow' };
+    return { label: map.low, cls: 'tag-red' };
   }
 }
 
@@ -324,7 +332,7 @@ function getPrompt(scores, totalScore, totalLevel) {
   const dimTexts = scores.map((s, i) => {
     const info = DIM_INFO[i];
     const pct = (s.score / info.full * 100).toFixed(1);
-    const lvl = getLevel(parseFloat(pct), info.lowGood).label;
+    const lvl = getLevel(parseFloat(pct), info.lowGood, info.key).label;
     const direction = info.lowGood ? '得分越低越好' : '得分越高越好';
     return `${info.name}（${info.desc}）：${s.score}/${info.full}（${pct}%，${direction}）—— 水平：${lvl}`;
   }).join('\n');
@@ -440,7 +448,7 @@ function renderReport(scores, totalScore, totalLevel, date, deepContent) {
   document.getElementById('scoreBoard').innerHTML = scores.map((s, i) => {
     const info = DIM_INFO[i];
     const pct = (s.score / info.full * 100).toFixed(1);
-    const lvl = getLevel(parseFloat(pct), info.lowGood);
+    const lvl = getLevel(parseFloat(pct), info.lowGood, info.key);
     return `
       <div class="score-card" style="border-top-color:${COLORS[i]};">
         <div class="label">测验${i+1} · ${info.name}</div>
@@ -454,7 +462,7 @@ function renderReport(scores, totalScore, totalLevel, date, deepContent) {
   document.getElementById('detailTable').innerHTML = scores.map((s, i) => {
     const info = DIM_INFO[i];
     const pct = (s.score / info.full * 100).toFixed(1);
-    const lvl = getLevel(parseFloat(pct), info.lowGood);
+    const lvl = getLevel(parseFloat(pct), info.lowGood, info.key);
     return `<tr>
       <td>测验${i+1} · ${info.name}（${info.desc}）</td>
       <td>${s.count}</td>
@@ -465,12 +473,37 @@ function renderReport(scores, totalScore, totalLevel, date, deepContent) {
     </tr>`;
   }).join('');
 
+  // 计分说明板块
+  const scoringNote = document.createElement('div');
+  scoringNote.className = 'section';
+  scoringNote.innerHTML = `
+    <h2><span class="icon">📝</span>计分说明</h2>
+    <p style="font-size:13px;color:var(--text-light);line-height:1.8;">
+      本量表采用特殊计分方式，<strong>高分不代表"优秀"</strong>。DSI 量表测量的是心理特征的<strong>明显程度</strong>：
+    </p>
+    <ul style="font-size:13px;color:var(--text-light);margin-left:20px;line-height:1.8;">
+      <li><strong>情绪反应（ER）</strong>：得分高 = 情绪波动大、容易被外界影响</li>
+      <li><strong>情感切断（EC）</strong>：得分高 = 在亲密关系中容易疏远、逃避</li>
+      <li><strong>核心自我（IP）</strong>：得分高 = 自我认同感强、能坚持自己（唯一正向维度）</li>
+      <li><strong>人际融合（FO）</strong>：得分高 = 容易被家庭情绪卷入、难以保持独立</li>
+    </ul>
+    <p style="font-size:13px;color:var(--text-light);line-height:1.8;margin-top:8px;">
+      因此，总分越高并不代表自我分化越好，而是代表各维度特征的综合明显程度。
+    </p>
+  `;
+  document.getElementById('reportContent').insertBefore(scoringNote, document.getElementById('scoreBoard').parentNode);
+
   // Dim analysis
+  const erLvl = getLevel(scores[0].score/60*100, true, 'er').label;
+  const ecLvl = getLevel(scores[1].score/72*100, true, 'ec').label;
+  const ipLvl = getLevel(scores[2].score/60*100, false, 'ip').label;
+  const foLvl = getLevel(scores[3].score/54*100, true, 'fo').label;
+
   const analysisTexts = [
-    `你在情绪反应维度处于<strong>${getLevel(scores[0].score/60*100, true).label}</strong>水平。大多数情况下你能够保持情绪稳定，但在面对亲近的人或重要冲突时，情绪仍可能占据上风，影响理性判断。`,
-    `你在亲密关系中倾向于保持一定的情感距离。当他人过于接近时，你会感到不舒服，甚至产生逃避的冲动。你重视个人空间，担心在关系中失去独立性。`,
-    `你的核心自我处于<strong>${getLevel(scores[2].score/60*100, false).label}</strong>水平。在压力下，你尚能保持一定的冷静和自我认知，但在坚持自我、不受他人评价影响方面仍有提升空间。`,
-    `你在人际融合维度得分<strong>${getLevel(scores[3].score/54*100, true).label}</strong>，说明你对家庭关系和亲密关系投入较深。你的情绪容易受到家庭系统的牵动。`
+    `你的<strong>${erLvl}</strong>。在平静状态下你能较好地管理情绪，但当面对亲近的人的批评或冲突时，情绪仍可能快速上头，影响理性判断。这不是"脆弱"，而是大脑的情绪警报系统比较敏感。`,
+    `你的<strong>${ecLvl}</strong>。当他人靠得太近时，你会本能地想逃。你重视个人空间和独立性，这本身不是问题，但如果每次感到压力就选择疏远，可能会让亲密关系难以深入。`,
+    `你的<strong>${ipLvl}</strong>。核心自我反映的是"无论外界怎么评价，我都知道自己是谁"的能力。你在压力下尚能保持一定的自我认知，但在坚持自己认为正确的事、不被他人眼光左右方面，还有成长空间。`,
+    `你的<strong>${foLvl}</strong>。你对家庭关系和亲密关系投入很深，容易为家人操心，家庭冲突会明显牵动你的情绪。这体现了你的责任感，但也意味着你的情绪边界容易被家庭系统渗透。`
   ];
   document.getElementById('dimAnalysis').innerHTML = scores.map((s, i) => {
     const info = DIM_INFO[i];
@@ -491,16 +524,42 @@ function renderReport(scores, totalScore, totalLevel, date, deepContent) {
   }
 
   // Comprehensive
+  const erCls = getLevel(scores[0].score/60*100, true, 'er').cls;
+  const ecCls = getLevel(scores[1].score/72*100, true, 'ec').cls;
+  const ipCls = getLevel(scores[2].score/60*100, false, 'ip').cls;
+  const foCls = getLevel(scores[3].score/54*100, true, 'fo').cls;
+
+  // 找出需要关注的维度（标红或标黄的）
+  const concerns = [];
+  if (erCls === 'tag-red' || erCls === 'tag-yellow') concerns.push(`情绪反应${erLvl}`);
+  if (ecCls === 'tag-red' || ecCls === 'tag-yellow') concerns.push(`情感距离${ecLvl}`);
+  if (ipCls === 'tag-red' || ipCls === 'tag-yellow') concerns.push(`核心自我${ipLvl}`);
+  if (foCls === 'tag-red' || foCls === 'tag-yellow') concerns.push(`人际融合${foLvl}`);
+
+  // 找出表现较好的维度
+  const strengths = [];
+  if (erCls === 'tag-green') strengths.push('情绪较稳定');
+  if (ecCls === 'tag-green') strengths.push('情感连接良好');
+  if (ipCls === 'tag-green') strengths.push('核心自我较强');
+  if (foCls === 'tag-green') strengths.push('人际边界清晰');
+
+  const concernText = concerns.length > 0
+    ? `值得关注的方面包括：${concerns.join('、')}。`
+    : '各维度表现均较为理想，继续保持即可。';
+  const strengthText = strengths.length > 0
+    ? `你的优势在于：${strengths.join('、')}。`
+    : '';
+
   document.getElementById('comprehensive').innerHTML = `
     <div class="analysis-box">
       <h4>整体画像</h4>
-      <p>你的自我分化水平处于<strong>${totalLevel}</strong>。你并非情绪高度失控的人，但在亲密关系中同时存在"想要靠近又想要逃离"的矛盾感受——既担心失去独立性（情感切断偏高），又难以真正从家庭中分离（人际融合偏高）。</p>
+      <p>你的自我分化水平处于<strong>${totalLevel}</strong>。${strengthText}${concernText}</p>
     </div>
     <div class="analysis-box">
       <h4>优势领域</h4>
       <ul>
-        <li><strong>情绪相对可控：</strong>情绪反应维度得分${getLevel(scores[0].score/60*100, true).label}，说明你在多数情况下不会被情绪完全支配。</li>
-        <li><strong>具备自我觉察：</strong>你能够感知到自己与他人的情绪互动模式，这是改变的前提。</li>
+        ${strengths.length > 0 ? strengthText.split('。')[0].replace('你的优势在于：','<li><strong>表现较好的维度：</strong>') + '</li>' : '<li><strong>自我觉察：</strong>你能够感知到自己与他人的情绪互动模式，这是改变的前提。</li>'}
+        <li><strong>主动探索：</strong>完成这份问卷本身就说明你对自我成长有意愿，这是最重要的起点。</li>
       </ul>
     </div>
     <div class="analysis-box">
@@ -568,7 +627,7 @@ async function main() {
   const totalScore = scores.reduce((s, d) => s + d.score, 0);
   const totalMax = FULL_SCORES.reduce((s, v) => s + v, 0);
   const totalPct = totalScore / totalMax;
-  const totalLevel = totalPct <= 0.45 ? '良好' : totalPct <= 0.55 ? '中等' : '偏低';
+  const totalLevel = totalPct <= 0.45 ? '自我分化水平较好' : totalPct <= 0.55 ? '自我分化水平中等' : '自我分化水平待提升';
 
   // Fetch deep analysis first (while showing loading)
   const deepContent = await fetchDeepAnalysis(scores, totalScore, totalLevel);

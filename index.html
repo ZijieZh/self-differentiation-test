@@ -221,7 +221,8 @@
   }
 
   @media (max-width: 600px) {
-    .options label { min-width: 60px; }
+    .options { gap: 4px; }
+    .options label { flex: 0 0 calc(33.333% - 3px); min-width: 0; }
     .options .opt-box { padding: 6px 2px; font-size: 11px; }
     header h1 { font-size: 20px; }
   }
