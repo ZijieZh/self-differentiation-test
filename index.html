@@ -11,6 +11,7 @@
   :root {
     --primary: #667eea;
     --primary-dark: #5a67d8;
+    --primary-light: #eef2ff;
     --bg: #f8fafc;
     --card: #ffffff;
     --text: #1f2937;
@@ -110,7 +111,7 @@
     transition: grid-template-rows 0.4s ease, opacity 0.3s ease;
     opacity: 1;
   }
-  .section-content > * {
+  .section-content > div {
     overflow: hidden;
   }
   .section-content.collapsed {
@@ -450,7 +451,7 @@ function submitQuiz() {
     section.items.forEach((_, i) => {
       const qid = `q_${sIdx}_${i}`;
       const val = document.querySelector(`input[name="${qid}"]:checked`);
-      sum += val ? parseInt(val.value) : 0;
+      sum += val ? parseInt(val.value, 10) : 0;
     });
     return { title: section.title, score: sum, count: section.items.length };
   });
