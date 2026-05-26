@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>自我分化问卷（DSI）</title>
 <style>
   :root {
@@ -102,13 +105,16 @@
     transform: rotate(-180deg);
   }
   .section-content {
-    overflow: hidden;
-    transition: max-height 0.4s ease, opacity 0.3s ease;
-    max-height: 8000px;
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.4s ease, opacity 0.3s ease;
     opacity: 1;
   }
+  .section-content > * {
+    overflow: hidden;
+  }
   .section-content.collapsed {
-    max-height: 0;
+    grid-template-rows: 0fr;
     opacity: 0;
   }
   .section-desc {
@@ -451,7 +457,7 @@ function submitQuiz() {
 
   localStorage.setItem('dsi_scores', JSON.stringify(scores));
   localStorage.setItem('dsi_date', new Date().toISOString());
-  window.location.href = 'report.html';
+  window.location.href = 'report.html?v=2';
 }
 
 render();
