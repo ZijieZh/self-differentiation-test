@@ -418,8 +418,13 @@ async function generateAIAnalysis() {
     status.textContent = '✅ AI 分析已完成';
 
   } catch (err) {
-    aiOutput.innerHTML = '<p style="color:#991b1b;">生成失败：' + escapeHtml(err.message) + '</p>';
+    let detail = err.message;
+    if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      detail = '网络或跨域(CORS)错误。GitHub Pages 可能无法直接访问 Moonshot API，建议下载到本地用浏览器打开，或使用后端代理。';
+    }
+    aiOutput.innerHTML = '<p style="color:#991b1b;"><strong>生成失败</strong></p><p style="color:#991b1b;font-size:12px;">' + escapeHtml(detail) + '</p>';
     status.textContent = '❌ 分析失败，已展示基础报告';
+    console.error('Kimi API Error:', err);
   }
 }
 
