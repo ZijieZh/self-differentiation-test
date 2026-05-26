@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Architecture
 
 ### 页面结构
+- `dsi-config.js` — 共享维度配置（维度名、满分、题数、方向）
 - `index.html` — 问卷页（41 题，6 点量表，4 个可折叠维度卡片）
 - `report.html` — 结果页（环形图、雷达图、维度分析、AI 深度解读）
 - `README.md` — 量表计分规则和技术说明
@@ -60,7 +61,7 @@ git push origin master
 
 ## 修改注意事项
 
-1. **修改计分或标签时同步两处**：`getLevel()` 的标签和 `getPrompt()` 的评分说明必须保持一致，避免 AI 输出与用户看到的标签矛盾。
+1. **修改维度配置优先改 `dsi-config.js`**：维度名、满分、题数、方向集中在共享配置中；`getLevel()` 的标签和 `getPrompt()` 的评分说明仍需保持一致，避免 AI 输出与用户看到的标签矛盾。
 2. **API key 更新**：新 key 需 base64 编码后替换 `API_KEY_ENC` 的值，不要直接写明文。
 3. **CDN 缓存**：Chart.js 使用精确版本号 `@4.4.4`，升级时同步更新版本。
 4. **跳转参数**：`index.html` 提交后跳转带 `?v=N` 参数用于缓存清除，修改时递增版本号。

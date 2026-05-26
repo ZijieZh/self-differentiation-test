@@ -7,8 +7,9 @@
 用浏览器直接打开 `index.html` 即可使用，无需服务器或构建工具。
 
 ```
-index.html  -- 问卷页（41题，6点量表）
-report.html -- 结果页（雷达图、环形图、维度分析）
+dsi-config.js -- 维度、满分和方向配置
+index.html    -- 问卷页（41题，6点量表）
+report.html   -- 结果页（雷达图、环形图、维度分析）
 ```
 
 ## 截图
@@ -50,7 +51,7 @@ report.html -- 结果页（雷达图、环形图、维度分析）
 
 - 纯 HTML/CSS/JavaScript，无框架
 - [Chart.js](https://www.chartjs.org/)（CDN，精确版本 `@4.4.4`）渲染图表
-- localStorage 存储答题数据（本机测试，不上传服务器）
+- localStorage 存储答题数据（用于本机报告生成）
 - [Kimi AI](https://platform.moonshot.cn/)（Moonshot API）生成个性化深度分析报告
 
 ## 本地运行
@@ -63,9 +64,11 @@ python -m http.server 8080
 
 或者直接双击 `index.html` 用浏览器打开。
 
-## 隐私说明
+## 数据采集与隐私说明
 
-所有数据仅存储在浏览器本地（localStorage），不会上传到任何服务器。关闭浏览器或清除数据后，报告不可恢复。
+基础答题结果会存储在当前浏览器的 localStorage 中，用于在 `report.html` 生成本机报告。关闭浏览器不会自动删除这些数据，清除浏览器站点数据后报告不可恢复。
+
+报告页会调用 Moonshot/Kimi API 生成个性化深度解读。调用时会把四个维度的测试得分、满分、占比、维度标签和总分说明发送到 Moonshot API，不发送姓名、联系方式等身份信息。继续使用本工具并打开报告页，即视为你已了解并同意上述数据采集与发送方式，使用即视为同意。
 
 ## 引用
 

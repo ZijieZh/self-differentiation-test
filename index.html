@@ -6,6 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self';">
 <title>自我分化问卷（DSI）</title>
 <style>
   :root {
@@ -250,10 +251,10 @@
 <div class="container">
   <div class="warning" id="warningBox">还有未完成的题目，请检查高亮标记的题目。</div>
 
-  <div class="section-card" data-section="0" onclick="onCardClick(event)">
+  <div class="section-card" data-section="0">
     <div class="section-title">
       <span>🧠 测验1 · 情绪反应</span>
-      <button class="toggle-btn" onclick="onArrowClick(event, this)" aria-label="折叠">
+      <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
         <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
       </button>
     </div>
@@ -261,10 +262,10 @@
     <div class="section-content" id="content0"><div id="quiz1"></div></div>
   </div>
 
-  <div class="section-card" data-section="1" onclick="onCardClick(event)">
+  <div class="section-card" data-section="1">
     <div class="section-title">
       <span>🛡️ 测验2 · 情感切断</span>
-      <button class="toggle-btn" onclick="onArrowClick(event, this)" aria-label="折叠">
+      <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
         <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
       </button>
     </div>
@@ -272,10 +273,10 @@
     <div class="section-content" id="content1"><div id="quiz2"></div></div>
   </div>
 
-  <div class="section-card" data-section="2" onclick="onCardClick(event)">
+  <div class="section-card" data-section="2">
     <div class="section-title">
       <span>🎯 测验3 · 核心自我</span>
-      <button class="toggle-btn" onclick="onArrowClick(event, this)" aria-label="折叠">
+      <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
         <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
       </button>
     </div>
@@ -283,10 +284,10 @@
     <div class="section-content" id="content2"><div id="quiz3"></div></div>
   </div>
 
-  <div class="section-card" data-section="3" onclick="onCardClick(event)">
+  <div class="section-card" data-section="3">
     <div class="section-title">
       <span>🔗 测验4 · 人际融合</span>
-      <button class="toggle-btn" onclick="onArrowClick(event, this)" aria-label="折叠">
+      <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
         <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
       </button>
     </div>
@@ -294,13 +295,15 @@
     <div class="section-content" id="content3"><div id="quiz4"></div></div>
   </div>
 
-  <button class="submit-btn" id="submitBtn" onclick="submitQuiz()">查看分析报告</button>
+  <button class="submit-btn" id="submitBtn" type="button">查看分析报告</button>
 </div>
 
+<script src="dsi-config.js"></script>
 <script>
+const DIMENSIONS = window.DSI_DIMENSIONS;
 const DATA = [
   {
-    id: 'quiz1', title: '测验1 · 情绪反应', items: [
+    id: 'quiz1', title: DIMENSIONS[0].title, items: [
       { text: '人们说我过于情绪化。', reverse: true },
       { text: '当与我亲近的人令我失望，我会暂时撤回。', reverse: false },
       { text: '我希望我不是那么情绪化。', reverse: true },
@@ -314,7 +317,7 @@ const DATA = [
     ]
   },
   {
-    id: 'quiz2', title: '测验2 · 情感切断', items: [
+    id: 'quiz2', title: DIMENSIONS[1].title, items: [
       { text: '我对我所关心的人表达感情有困难。', reverse: true },
       { text: '我经常感到受家里人的限制。', reverse: true },
       { text: '当人们过度的与我接近，我倾向于疏远。', reverse: true },
@@ -330,7 +333,7 @@ const DATA = [
     ]
   },
   {
-    id: 'quiz3', title: '测验3 · 核心自我', items: [
+    id: 'quiz3', title: DIMENSIONS[2].title, items: [
       { text: '即便在压力下，我往往保持很冷静。', reverse: false },
       { text: '无论我的生活中发生了什么，我知道我永远不会丧失我是谁的感受。', reverse: false },
       { text: '通常，我不会为了取悦他人而改变我的行为。', reverse: false },
@@ -344,7 +347,7 @@ const DATA = [
     ]
   },
   {
-    id: 'quiz4', title: '测验4 · 人际融合', items: [
+    id: 'quiz4', title: DIMENSIONS[3].title, items: [
       { text: '我经常介入家庭其他成员的冲突。', reverse: true },
       { text: '可以说我仍然太依附于我的父母。', reverse: true },
       { text: '每当我的人际关系有一个问题时，我会急着要马上解决。', reverse: true },
@@ -407,7 +410,9 @@ function doToggle(card) {
   const btn = card.querySelector('.toggle-btn');
   btn.classList.toggle('collapsed');
   content.classList.toggle('collapsed');
-  btn.setAttribute('aria-label', content.classList.contains('collapsed') ? '展开' : '折叠');
+  const collapsed = content.classList.contains('collapsed');
+  btn.setAttribute('aria-label', collapsed ? '展开' : '折叠');
+  btn.setAttribute('aria-expanded', String(!collapsed));
 }
 
 function onArrowClick(event, btn) {
@@ -461,7 +466,18 @@ function submitQuiz() {
   window.location.href = 'report.html?v=2';
 }
 
+function initializeInteractions() {
+  document.querySelectorAll('.section-card').forEach(card => {
+    card.addEventListener('click', onCardClick);
+  });
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', event => onArrowClick(event, btn));
+  });
+  document.getElementById('submitBtn').addEventListener('click', submitQuiz);
+}
+
 render();
+initializeInteractions();
 </script>
 </body>
 </html>
