@@ -117,3 +117,11 @@ test('overall level uses normalized health score instead of raw total score', ()
 test('radar chart note accurately describes normalization', () => {
   assert(files.report.includes('ER / EC / FO 已反向处理，IP 保持正向'), 'radar note should describe ER/EC/FO reversal and IP positive direction');
 });
+
+test('deep analysis API timeout is three minutes', () => {
+  assert(files.report.includes('controller.abort(), 180000'), 'report.html must wait 3 minutes before aborting AI analysis');
+  assert(files.report.includes('Kimi API 请求超时（3分钟）'), 'console warning should describe the 3 minute timeout');
+  assert(files.report.includes('3 分钟'), 'fallback text should tell users the 3 minute timeout window');
+  assert(files.readme.includes('3 分钟'), 'README should document the 3 minute AI timeout');
+  assert(files.readme.includes('Kimi AI'), 'README should keep the AI analysis note');
+});

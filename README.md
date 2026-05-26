@@ -52,7 +52,7 @@ report.html   -- 结果页（雷达图、环形图、维度分析）
 - 纯 HTML/CSS/JavaScript，无框架
 - [Chart.js](https://www.chartjs.org/)（CDN，精确版本 `@4.4.4`）渲染图表
 - localStorage 存储答题数据（用于本机报告生成）
-- [Kimi AI](https://platform.moonshot.cn/)（Moonshot API）生成个性化深度分析报告
+- [Kimi AI](https://platform.moonshot.cn/)（Moonshot API）生成个性化深度分析报告，最长等待 3 分钟
 
 ## 本地运行
 
