@@ -225,16 +225,10 @@
     <button class="btn" onclick="window.print()">打印报告</button>
   </div>
 
-  <!-- Kimi API 配置面板 -->
+  <!-- AI 分析状态 -->
   <div class="api-panel" id="apiPanel">
-    <h3>🤖 AI 个性化深度分析（可选）</h3>
-    <p>输入你的 Kimi（Moonshot）API Key，由大模型生成专属的个性化心理分析报告。Key 仅保存在浏览器本地，不会上传到任何服务器。</p>
-    <input type="password" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
-    <div class="api-row">
-      <button class="btn" id="aiBtn" onclick="generateAIAnalysis()">生成 AI 分析报告</button>
-      <button class="btn btn-outline" onclick="clearApiKey()">清除 Key</button>
-    </div>
-    <div class="status-msg" id="apiStatus"></div>
+    <h3>🤖 AI 个性化深度分析</h3>
+    <div class="status-msg" id="apiStatus"><span class="loading-dots">Kimi 正在生成分析报告</span></div>
   </div>
 
   <div class="section" style="text-align:center;">
@@ -330,21 +324,7 @@ function getLevel(pct, lowGood) {
 }
 
 /* ================= Kimi API 功能 ================= */
-const API_KEY_STORAGE = 'dsi_kimi_api_key';
-
-function loadApiKey() {
-  const key = localStorage.getItem(API_KEY_STORAGE);
-  if (key) {
-    document.getElementById('apiKeyInput').value = key;
-    document.getElementById('apiStatus').textContent = '✅ API Key 已加载（仅保存在本地）';
-  }
-}
-
-function clearApiKey() {
-  localStorage.removeItem(API_KEY_STORAGE);
-  document.getElementById('apiKeyInput').value = '';
-  document.getElementById('apiStatus').textContent = '✅ API Key 已清除';
-}
+const KIMI_API_KEY = 'sk-J5yGODxsbryrE3Zn7gDuIPGTj1Hw7vdFsTeKhqH6xV47PSiG';
 
 function getPrompt(scores, totalScore, totalLevel) {
   const dimTexts = scores.map((s, i) => {
@@ -398,23 +378,10 @@ ${dimTexts}
 }
 
 async function generateAIAnalysis() {
-  const input = document.getElementById('apiKeyInput');
-  const btn = document.getElementById('aiBtn');
   const status = document.getElementById('apiStatus');
   const aiSection = document.getElementById('aiSection');
   const aiOutput = document.getElementById('aiOutput');
 
-  const apiKey = input.value.trim();
-  if (!apiKey || !apiKey.startsWith('sk-')) {
-    status.textContent = '❌ 请输入有效的 Kimi API Key（以 sk- 开头）';
-    return;
-  }
-
-  // Save key locally
-  localStorage.setItem(API_KEY_STORAGE, apiKey);
-  status.textContent = '';
-  btn.disabled = true;
-  btn.textContent = '分析中';
   aiSection.style.display = 'block';
   aiOutput.innerHTML = '<span class="loading-dots">Kimi 正在生成分析报告</span>';
   aiOutput.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -424,7 +391,7 @@ async function generateAIAnalysis() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
+        'Authorization': 'Bearer ' + KIMI_API_KEY
       },
       body: JSON.stringify({
         model: 'kimi-k2.5',
@@ -452,10 +419,7 @@ async function generateAIAnalysis() {
 
   } catch (err) {
     aiOutput.innerHTML = '<p style="color:#991b1b;">生成失败：' + escapeHtml(err.message) + '</p>';
-    status.textContent = '❌ 请检查 API Key 是否有效，或网络连接是否正常';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '生成 AI 分析报告';
+    status.textContent = '❌ 分析失败，已展示基础报告';
   }
 }
 
@@ -642,7 +606,8 @@ function render() {
     }
   });
 
-  loadApiKey();
+  // Auto-generate AI analysis on page load
+  generateAIAnalysis();
 }
 
 render();
