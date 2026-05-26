@@ -394,12 +394,12 @@ async function generateAIAnalysis() {
         'Authorization': 'Bearer ' + KIMI_API_KEY
       },
       body: JSON.stringify({
-        model: 'kimi-k2.5',
+        model: 'kimi-k2.6',
         messages: [
           { role: 'system', content: '你是一位专业心理咨询师，精通 Bowen 家庭系统理论。输出使用 Markdown 格式。' },
           { role: 'user', content: getPrompt(scoresData, totalScoreData, totalLevelData) }
         ],
-        temperature: 0.7,
+        temperature: 1,
         max_tokens: 2048,
         stream: false
       })
