@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-自我分化问卷（DSI）网页版 —— 纯静态 HTML/CSS/JavaScript 心理测评工具，基于 Bowen 家庭系统理论。部署于 GitHub Pages，无构建工具、无框架、无后端。
+自我分化问卷（DSI）网页版 —— 纯静态 HTML/CSS/JavaScript 心理测评工具，基于 Bowen 家庭系统理论。部署于 GitHub Pages（`zijiezh.github.io/self-differentiation-test`），无构建工具、无框架、无后端。
+
+> 项目路径：`C:/AI/exes/self-differentiation-test`（已从 `C:/AI/self-differentiation-test` 迁移至此）
 
 ## Architecture
 
