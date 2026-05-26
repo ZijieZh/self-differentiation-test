@@ -1,0 +1,66 @@
+# self-differentiation-test
+
+自我分化问卷（DSI）网页版 —— 基于 Bowen 家庭系统理论的在线心理测评工具。
+
+## 在线体验
+
+用浏览器直接打开 `index.html` 即可使用，无需服务器或构建工具。
+
+```
+index.html  -- 问卷页（41题，6点量表）
+report.html -- 结果页（雷达图、环形图、维度分析）
+```
+
+## 截图
+
+**问卷页**
+- 顶部实时进度条（sticky）
+- 4 个维度分块：情绪反应、情感切断、核心自我、人际融合
+- 每题选项带分值提示，选中即自动记录
+
+**报告页**
+- 总分环形图（带动画）
+- 四维度雷达图（统一健康度指数）
+- 得分卡片 + 明细表格
+- 维度深度分析 + 综合成长建议
+- 支持打印
+
+## 量表说明
+
+| 维度 | 题数 | 计分方式 | 得分范围 |
+|------|------|----------|----------|
+| 情绪反应（ER） | 10 | 反向题（除第2、10题） | 10-60 |
+| 情感切断（EC） | 12 | 反向题（除第12题） | 12-72 |
+| 核心自我（IP） | 10 | 正向题（除第4、9题反向） | 10-60 |
+| 人际融合（FO） | 9 | 反向题（除第9题正向） | 9-54 |
+
+总分满分 **246** 分。得分仅供参考，不构成临床诊断。
+
+## 技术栈
+
+- 纯 HTML/CSS/JavaScript，无框架
+- [Chart.js](https://www.chartjs.org/)（CDN）渲染图表
+- localStorage 存储答题数据（本机测试，不上传服务器）
+
+## 本地运行
+
+```bash
+# 任意 HTTP 服务器均可
+python -m http.server 8080
+# 然后打开 http://localhost:8080
+```
+
+或者直接双击 `index.html` 用浏览器打开。
+
+## 隐私说明
+
+所有数据仅存储在浏览器本地（localStorage），不会上传到任何服务器。关闭浏览器或清除数据后，报告不可恢复。
+
+## 引用
+
+- Bowen, M. (1978). *Family therapy in clinical practice*. Jason Aronson.
+- Skowron, E. A., & Schmitt, T. A. (2003). The Differentiation of Self Inventory: Development and initial validation. *Journal of Counseling Psychology*, 50(1), 80-91.
+
+## License
+
+MIT

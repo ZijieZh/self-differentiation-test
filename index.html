@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自我分化问卷（DSI）</title>
+<style>
+  :root {
+    --primary: #667eea;
+    --primary-dark: #5a67d8;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --border: #e5e7eb;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Microsoft YaHei', 'PingFang SC', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding-bottom: 40px;
+  }
+  header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    padding: 40px 20px;
+    margin-bottom: 24px;
+  }
+  header h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+  header p { font-size: 14px; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+  .container { max-width: 800px; margin: 0 auto; padding: 0 16px; }
+  .progress-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--card);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    margin: 0 16px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .progress-text { font-size: 13px; color: var(--text-light); white-space: nowrap; }
+
+  .section-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-desc {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 20px;
+  }
+
+  .question {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .question:last-child { border-bottom: none; }
+  .q-text {
+    font-size: 14px;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .q-text .q-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--primary-light, #eef2ff);
+    color: var(--primary);
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .options label {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .options input[type="radio"] { display: none; }
+  .options .opt-box {
+    display: block;
+    padding: 8px 4px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-light);
+    transition: all 0.15s ease;
+    background: white;
+  }
+  .options input:checked + .opt-box {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-weight: 600;
+  }
+  .options .opt-box:hover {
+    border-color: var(--primary);
+  }
+  .options .opt-score {
+    display: block;
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  .submit-btn {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    margin: 32px auto;
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(102,126,234,0.35);
+  }
+  .submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .warning {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  @media (max-width: 600px) {
+    .options label { min-width: 60px; }
+    .options .opt-box { padding: 6px 2px; font-size: 11px; }
+    header h1 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>自我分化问卷（DSI）</h1>
+  <p>请根据你自身的情况填写。答案没有正确错误之分，可以安心作答。共 41 题，约需 5-8 分钟。</p>
+</header>
+
+<div class="progress-sticky">
+  <span class="progress-text">已答</span>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="progress-text" id="progressText">0 / 41</span>
+</div>
+
+<div class="container">
+  <div class="warning" id="warningBox">还有未完成的题目，请检查高亮标记的题目。</div>
+
+  <div class="section-card">
+    <div class="section-title">🧠 测验1 · 情绪反应</div>
+    <div class="section-desc">共 10 题。描述你在情绪起伏时的反应模式。</div>
+    <div id="quiz1"></div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">🛡️ 测验2 · 情感切断</div>
+    <div class="section-desc">共 12 题。描述你在亲密关系中的距离感。</div>
+    <div id="quiz2"></div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">🎯 测验3 · 核心自我</div>
+    <div class="section-desc">共 10 题。描述你在压力下的自我稳定性。</div>
+    <div id="quiz3"></div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">🔗 测验4 · 人际融合</div>
+    <div class="section-desc">共 9 题。描述你与他人（尤其家人）的情绪融合程度。</div>
+    <div id="quiz4"></div>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="submitQuiz()">查看分析报告</button>
+</div>
+
+<script>
+const DATA = [
+  {
+    id: 'q1', title: '测验1 · 情绪反应', items: [
+      { text: '人们说我过于情绪化。', reverse: true },
+      { text: '当与我亲近的人令我失望，我会暂时撤回。', reverse: false },
+      { text: '我希望我不是那么情绪化。', reverse: true },
+      { text: '当我的情绪占优势的时候，我在清晰的思考上会有困难。', reverse: true },
+      { text: '有时，我觉得自己似乎坐在情绪的过山车上。', reverse: true },
+      { text: '我对批评过于敏感。', reverse: true },
+      { text: '如果我与我的配偶或父母发生了争论，我往往会整天想这件事。', reverse: true },
+      { text: '如果有人令我心烦，我似乎无法轻易罢休。', reverse: true },
+      { text: '我对别人伤害我很敏感。', reverse: true },
+      { text: '大多数事情我都能淡然面对。', reverse: false },
+    ]
+  },
+  {
+    id: 'q2', title: '测验2 · 情感切断', items: [
+      { text: '我对我所关心的人表达感情有困难。', reverse: true },
+      { text: '我经常感到受家里人的限制。', reverse: true },
+      { text: '当人们过度的与我接近，我倾向于疏远。', reverse: true },
+      { text: '如果我向我的配偶或合伙人表达我真实的感受，他们会无法忍受。', reverse: true },
+      { text: '人们太接近我的时候我会感到不舒服。', reverse: true },
+      { text: '我担心在亲密关系中会失去自己的独立性。', reverse: true },
+      { text: '我经常感到我的配偶或父母对我有过分的要求。', reverse: true },
+      { text: '当我的一个人际关系变得非常紧张，我觉得自己从其中逃避的冲动。', reverse: true },
+      { text: '我绝对不会考虑向家庭成员的任何人获得情感支持。', reverse: true },
+      { text: '我与配偶或父母在一起的时候，经常感到窒息。', reverse: true },
+      { text: '当事情变坏，谈论这些通常会更糟。', reverse: true },
+      { text: '如果我的配偶或家人给予我更多我所需要的空间，我们的关系或许会更好。', reverse: false },
+    ]
+  },
+  {
+    id: 'q3', title: '测验3 · 核心自我', items: [
+      { text: '即便在压力下，我往往保持很冷静。', reverse: false },
+      { text: '无论我的生活中发生了什么，我知道我永远不会丧失我是谁的感受。', reverse: false },
+      { text: '通常，我不会为了取悦他人而改变我的行为。', reverse: false },
+      { text: '当我在与他人争论时，我无法将我对此事的法与我对他的情绪分开。', reverse: true },
+      { text: '为我所不能改变的事情而苦恼是毫无意义的。', reverse: false },
+      { text: '我相当接受自我。', reverse: false },
+      { text: '我能够对他人说"不"，即使我感到了来自他们的压力。', reverse: false },
+      { text: '我不太关心别人对我的赞赏，而注重我所做所想是正确的。', reverse: false },
+      { text: '我自尊心很低。', reverse: true },
+      { text: '我通常会去做我认为是正确的事，而不去管别人怎么说。', reverse: false },
+    ]
+  },
+  {
+    id: 'q4', title: '测验4 · 人际融合', items: [
+      { text: '我经常介入家庭其他成员的冲突。', reverse: true },
+      { text: '可以说我仍然太依附于我的父母。', reverse: true },
+      { text: '每当我的人际关系有一个问题时，我会急着要马上解决。', reverse: true },
+      { text: '对我来说，经常的与父母保持联络很重要。', reverse: true },
+      { text: '当配偶或父母离开我的时间太长，我感到我似乎失去了我的一部分。', reverse: true },
+      { text: '我设法达到父母的期望。', reverse: true },
+      { text: '与我的父母或兄弟姐妹争论仍然会让我感到很可怕。', reverse: true },
+      { text: '我发现自己对我的配偶或父母的关系考虑的很多。', reverse: true },
+      { text: '我担心与我接近的人会生病、伤害或不安。', reverse: false },
+    ]
+  }
+];
+
+const LABELS = ['完全不同意', '基本不同意', '有点不同意', '有点同意', '基本同意', '完全同意'];
+
+function render() {
+  let globalIdx = 0;
+  DATA.forEach((section, sIdx) => {
+    const container = document.getElementById(section.id);
+    const html = section.items.map((item, i) => {
+      const qid = `q_${sIdx}_${i}`;
+      globalIdx++;
+      const opts = LABELS.map((label, li) => {
+        const score = item.reverse ? (6 - li) : (li + 1);
+        return `
+          <label>
+            <input type="radio" name="${qid}" value="${score}" data-section="${sIdx}">
+            <span class="opt-box">
+              ${label}
+              <span class="opt-score">${score}分</span>
+            </span>
+          </label>`;
+      }).join('');
+      return `
+        <div class="question" id="wrap_${qid}">
+          <div class="q-text"><span class="q-num">${globalIdx}</span>${item.text}</div>
+          <div class="options">${opts}</div>
+        </div>`;
+    }).join('');
+    container.innerHTML = html;
+  });
+
+  document.querySelectorAll('input[type="radio"]').forEach(r => {
+    r.addEventListener('change', updateProgress);
+  });
+}
+
+function updateProgress() {
+  const total = DATA.reduce((s, d) => s + d.items.length, 0);
+  const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+  const pct = (answered / total * 100).toFixed(1);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${answered} / ${total}`;
+}
+
+function submitQuiz() {
+  const total = DATA.reduce((s, d) => s + d.items.length, 0);
+  const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+  if (answered < total) {
+    document.getElementById('warningBox').style.display = 'block';
+    // scroll to first unanswered
+    const firstUnanswered = document.querySelector('input[type="radio"]:not(:checked)');
+    if (firstUnanswered) {
+      const wrap = firstUnanswered.closest('.question');
+      if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return;
+  }
+
+  const scores = DATA.map((section, sIdx) => {
+    let sum = 0;
+    section.items.forEach((_, i) => {
+      const qid = `q_${sIdx}_${i}`;
+      const val = document.querySelector(`input[name="${qid}"]:checked`);
+      sum += val ? parseInt(val.value) : 0;
+    });
+    return { title: section.title, score: sum, count: section.items.length };
+  });
+
+  localStorage.setItem('dsi_scores', JSON.stringify(scores));
+  localStorage.setItem('dsi_date', new Date().toISOString());
+  window.location.href = 'report.html';
+}
+
+render();
+</script>
+</body>
+</html>

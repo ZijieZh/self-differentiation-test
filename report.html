@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自我分化问卷（DSI）分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --primary: #3b82f6;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --border: #e5e7eb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 20px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  header {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 16px;
+    margin-bottom: 24px;
+  }
+  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  header p { font-size: 14px; opacity: 0.9; }
+  .score-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .score-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    text-align: center;
+    border-top: 4px solid var(--primary);
+  }
+  .score-card .label { font-size: 12px; color: var(--text-light); margin-bottom: 4px; }
+  .score-card .score { font-size: 32px; font-weight: 700; color: var(--primary); }
+  .score-card .range { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+  .score-card .pct { font-size: 14px; color: var(--text-light); margin-top: 4px; }
+  .section {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .section h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #dbeafe;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section h2 .icon { font-size: 20px; }
+  .chart-wrap { max-width: 500px; margin: 0 auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); }
+  th { background: #dbeafe; font-weight: 600; color: var(--text); }
+  td:first-child, th:first-child { text-align: left; }
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .tag-green { background: #d1fae5; color: #065f46; }
+  .tag-yellow { background: #fef3c7; color: #92400e; }
+  .tag-red { background: #fee2e2; color: #991b1b; }
+  .analysis-box {
+    background: #f0f9ff;
+    border-left: 4px solid var(--primary);
+    padding: 16px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 12px;
+  }
+  .analysis-box h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #0369a1; }
+  .analysis-box p { font-size: 13px; color: var(--text); }
+  .analysis-box ul { font-size: 13px; margin-left: 18px; color: var(--text); }
+  .analysis-box li { margin-bottom: 4px; }
+  .dim-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .dim-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .dim-card .bar-wrap { background: var(--bg); border-radius: 6px; height: 20px; overflow: hidden; margin-bottom: 8px; }
+  .dim-card .bar { height: 100%; border-radius: 6px; transition: width 0.8s ease; }
+  .dim-card .desc { font-size: 12px; color: var(--text-light); }
+  .footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-light);
+    padding: 20px;
+  }
+  .total-ring {
+    width: 140px; height: 140px; margin: 0 auto 16px;
+    position: relative;
+  }
+  .total-ring svg { transform: rotate(-90deg); }
+  .total-ring .ring-bg { fill: none; stroke: #e5e7eb; stroke-width: 10; }
+  .total-ring .ring-val { fill: none; stroke: url(#grad1); stroke-width: 10; stroke-linecap: round;
+    stroke-dasharray: 377; stroke-dashoffset: 377; transition: stroke-dashoffset 1.5s ease;
+  }
+  .total-ring .center-text {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .total-ring .center-text .num { font-size: 28px; font-weight: 700; color: var(--primary); display: block; }
+  .total-ring .center-text .lbl { font-size: 12px; color: var(--text-light); }
+  .btn-row { text-align: center; margin-bottom: 24px; }
+  .btn {
+    display: inline-block;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    margin: 0 4px;
+  }
+  @media (max-width: 600px) {
+    header h1 { font-size: 22px; }
+    .score-card .score { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>自我分化问卷（DSI）分析报告</h1>
+    <p>Differentiation of Self Inventory · <span id="reportDate"></span></p>
+  </header>
+
+  <div class="btn-row">
+    <a class="btn" href="index.html">重新测试</a>
+    <button class="btn" onclick="window.print()">打印报告</button>
+  </div>
+
+  <div class="section" style="text-align:center;">
+    <div class="total-ring">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <circle class="ring-bg" cx="70" cy="70" r="60"/>
+        <circle class="ring-val" id="ringVal" cx="70" cy="70" r="60"/>
+      </svg>
+      <div class="center-text">
+        <span class="num" id="totalScore">--</span>
+        <span class="lbl">总分 / 246</span>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--text-light);">综合自我分化水平：<strong style="color:var(--primary);" id="totalLevel">--</strong></p>
+  </div>
+
+  <div class="score-board" id="scoreBoard">
+    <!-- JS fills -->
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📊</span>维度雷达图</h2>
+    <div class="chart-wrap">
+      <canvas id="radarChart"></canvas>
+    </div>
+    <p style="font-size:12px;color:var(--text-light);text-align:center;margin-top:8px;">
+      注：ER / EC / FO 得分越低越好；IP 得分越高越好。图中已将 IP 反向处理以便统一观察。
+    </p>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📋</span>各维度得分明细</h2>
+    <table>
+      <thead>
+        <tr><th>测验</th><th>题目数</th><th>得分</th><th>满分</th><th>占比</th><th>水平评估</th></tr>
+      </thead>
+      <tbody id="detailTable">
+        <!-- JS fills -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">🔍</span>维度深度分析</h2>
+    <div id="dimAnalysis">
+      <!-- JS fills -->
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">💡</span>综合解读与建议</h2>
+    <div id="comprehensive">
+      <!-- JS fills -->
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="icon">📖</span>说明</h2>
+    <p style="font-size:12px;color:var(--text-light);">
+      自我分化（Differentiation of Self）由家庭治疗大师 Murray Bowen 提出，指个体在保持情感连接的同时维持独立自我的能力。DSI 量表从四个维度评估这一能力：情绪反应（ER）、情感切断（EC）、核心自我（IP）和人际融合（FO）。得分仅供参考，不构成临床诊断。如需深入探索，建议寻求专业心理咨询师的支持。
+    </p>
+  </div>
+
+  <div class="footer">
+    报告生成日期：<span id="footerDate"></span> · 自我分化问卷（DSI）分析报告
+  </div>
+</div>
+
+<script>
+const FULL_SCORES = [60, 72, 60, 54];
+const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
+const DIM_INFO = [
+  { key: 'er', name: '情绪反应', full: 60, desc: 'Emotional Reactivity', lowGood: true },
+  { key: 'ec', name: '情感切断', full: 72, desc: 'Emotional Cutoff', lowGood: true },
+  { key: 'ip', name: '核心自我', full: 60, desc: 'I-Position', lowGood: false },
+  { key: 'fo', name: '人际融合', full: 54, desc: 'Fusion with Others', lowGood: true },
+];
+
+function getLevel(pct, lowGood) {
+  if (lowGood) {
+    if (pct <= 35) return { label: '良好', cls: 'tag-green' };
+    if (pct <= 55) return { label: '中等', cls: 'tag-yellow' };
+    return { label: '偏高', cls: 'tag-red' };
+  } else {
+    if (pct >= 65) return { label: '良好', cls: 'tag-green' };
+    if (pct >= 45) return { label: '中等', cls: 'tag-yellow' };
+    return { label: '偏低', cls: 'tag-red' };
+  }
+}
+
+function render() {
+  const raw = localStorage.getItem('dsi_scores');
+  if (!raw) {
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;"><h2>暂无数据</h2><p>请先完成测试。</p><a class="btn" href="index.html">前往测试</a></div>';
+    return;
+  }
+  const scores = JSON.parse(raw);
+  const dateStr = localStorage.getItem('dsi_date');
+  const date = dateStr ? new Date(dateStr).toLocaleDateString('zh-CN') : new Date().toLocaleDateString('zh-CN');
+  document.getElementById('reportDate').textContent = date;
+  document.getElementById('footerDate').textContent = date;
+
+  const totalScore = scores.reduce((s, d) => s + d.score, 0);
+  const totalMax = FULL_SCORES.reduce((s, v) => s + v, 0);
+  const totalPct = totalScore / totalMax;
+
+  document.getElementById('totalScore').textContent = totalScore;
+
+  let totalLevelText = '';
+  if (totalPct <= 0.45) totalLevelText = '良好';
+  else if (totalPct <= 0.55) totalLevelText = '中等';
+  else totalLevelText = '偏低';
+  document.getElementById('totalLevel').textContent = totalLevelText;
+
+  // Ring animation
+  const circumference = 2 * Math.PI * 60;
+  const offset = circumference * (1 - totalPct);
+  setTimeout(() => {
+    document.getElementById('ringVal').style.strokeDasharray = circumference;
+    document.getElementById('ringVal').style.strokeDashoffset = offset;
+  }, 100);
+
+  // Score cards
+  const board = document.getElementById('scoreBoard');
+  board.innerHTML = scores.map((s, i) => {
+    const info = DIM_INFO[i];
+    const pct = (s.score / info.full * 100).toFixed(1);
+    const lvl = getLevel(parseFloat(pct), info.lowGood);
+    return `
+      <div class="score-card" style="border-top-color:${COLORS[i]};">
+        <div class="label">测验${i+1} · ${info.name}</div>
+        <div class="score" style="color:${COLORS[i]};">${s.score}</div>
+        <div class="range">满分 ${info.full}</div>
+        <div class="pct">${pct}% · <span class="tag ${lvl.cls}">${lvl.label}</span></div>
+      </div>`;
+  }).join('');
+
+  // Detail table
+  const tbody = document.getElementById('detailTable');
+  tbody.innerHTML = scores.map((s, i) => {
+    const info = DIM_INFO[i];
+    const pct = (s.score / info.full * 100).toFixed(1);
+    const lvl = getLevel(parseFloat(pct), info.lowGood);
+    return `<tr>
+      <td>测验${i+1} · ${info.name}（${info.desc}）</td>
+      <td>${s.count}</td>
+      <td>${s.score}</td>
+      <td>${info.full}</td>
+      <td>${pct}%</td>
+      <td><span class="tag ${lvl.cls}">${lvl.label}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Dim analysis
+  const analysisDiv = document.getElementById('dimAnalysis');
+  const analysisTexts = [
+    `你在情绪反应维度处于<strong>${getLevel(scores[0].score/60*100, true).label}</strong>水平。大多数情况下你能够保持情绪稳定，但在面对亲近的人或重要冲突时，情绪仍可能占据上风，影响理性判断。你并非高度情绪化的人，但偶尔会被批评或人际摩擦所困扰。`,
+    `你在亲密关系中倾向于保持一定的情感距离。当他人过于接近时，你会感到不舒服，甚至产生逃避的冲动。你重视个人空间，担心在关系中失去独立性。这可能是一种自我保护机制，但也可能影响深度亲密关系的建立。`,
+    `你的核心自我处于<strong>${getLevel(scores[2].score/60*100, false).label}</strong>水平。在压力下，你尚能保持一定的冷静和自我认知，但在"做自己认为正确的事"、"不受他人评价影响"以及"对他人说不"方面仍有提升空间。你对自我价值的认同感需要进一步巩固。`,
+    `你在人际融合维度得分<strong>${getLevel(scores[3].score/54*100, true).label}</strong>，说明你对家庭关系和亲密关系投入较深。你仍然较依附于父母，对家庭冲突敏感，会频繁考虑与家人的关系。虽然这体现了你对关系的重视，但也意味着你的情绪容易受到家庭系统的牵动。`
+  ];
+  analysisDiv.innerHTML = scores.map((s, i) => {
+    const info = DIM_INFO[i];
+    const pct = (s.score / info.full * 100).toFixed(1);
+    return `
+      <div class="dim-card">
+        <h4>${info.name}（${info.desc}）<span style="font-weight:400;color:var(--text-light);">${s.score} / ${info.full}</span></h4>
+        <div class="bar-wrap"><div class="bar" style="width:${pct}%;background:linear-gradient(90deg,${COLORS[i]}88,${COLORS[i]});"></div></div>
+        <div class="desc">${analysisTexts[i]}</div>
+      </div>`;
+  }).join('');
+
+  // Comprehensive
+  const compDiv = document.getElementById('comprehensive');
+  compDiv.innerHTML = `
+    <div class="analysis-box">
+      <h4>整体画像</h4>
+      <p>你的自我分化水平处于<strong>${totalLevelText}</strong>。你并非情绪高度失控的人，但在亲密关系中同时存在"想要靠近又想要逃离"的矛盾感受——既担心失去独立性（情感切断偏高），又难以真正从家庭中分离（人际融合偏高）。核心自我的不够稳固，使你在面对外界压力时容易摇摆。</p>
+    </div>
+    <div class="analysis-box">
+      <h4>优势领域</h4>
+      <ul>
+        <li><strong>情绪相对可控：</strong>情绪反应维度得分${getLevel(scores[0].score/60*100, true).label}，说明你在多数情况下不会被情绪完全支配。</li>
+        <li><strong>具备自我觉察：</strong>你能够感知到自己与他人的情绪互动模式，这是改变的前提。</li>
+      </ul>
+    </div>
+    <div class="analysis-box">
+      <h4>成长建议</h4>
+      <ul>
+        <li><strong>巩固核心自我：</strong>练习在压力情境下坚持自己的观点，逐步建立"即使别人不赞同，我也知道自己是谁"的内在稳定感。</li>
+        <li><strong>平衡亲密与独立：</strong>情感切断和人际融合同时偏高，说明你在"靠近-逃离"之间摇摆。尝试在关系中既保持自我边界，又不完全切断情感连接。</li>
+        <li><strong>降低家庭情绪卷入：</strong>当家庭冲突发生时，有意识地做一个观察者而非参与者，区分"他人的情绪"和"自己的情绪"。</li>
+        <li><strong>练习表达真实感受：</strong>在安全的亲密关系中，尝试表达真实情感而非疏远或压抑，逐步体验"表达≠失去自我"。</li>
+      </ul>
+    </div>
+  `;
+
+  // Radar chart
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  const erHealth = 100 - (scores[0].score / 60 * 100);
+  const ecHealth = 100 - (scores[1].score / 72 * 100);
+  const ipHealth = (scores[2].score / 60 * 100);
+  const foHealth = 100 - (scores[3].score / 54 * 100);
+
+  new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['情绪反应\n(越低越好)', '情感切断\n(越低越好)', '核心自我\n(越高越好)', '人际融合\n(越低越好)'],
+      datasets: [{
+        label: '健康度指数',
+        data: [erHealth, ecHealth, ipHealth, foHealth],
+        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+        borderColor: '#667eea',
+        pointBackgroundColor: '#667eea',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#667eea',
+        borderWidth: 2,
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 20, font: { size: 10 } },
+          pointLabels: { font: { size: 12, family: 'Microsoft YaHei' } }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return '健康度: ' + context.raw.toFixed(1) + '%';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+render();
+</script>
+</body>
+</html>
