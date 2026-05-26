@@ -56,6 +56,12 @@ test('pages do not use inline onclick handlers', () => {
   assert(!/\sonclick=/.test(files.report), 'report.html still has inline onclick handlers');
 });
 
+test('quiz section toggle is bound only to the section header area', () => {
+  assert(files.index.includes('class="section-header"'), 'index.html must wrap each clickable section header');
+  assert(!files.index.includes("querySelectorAll('.section-card')"), 'section cards must not be click toggle targets');
+  assert(files.index.includes("querySelectorAll('.section-header')"), 'section headers must be click toggle targets');
+});
+
 test('README discloses AI data collection and consent by use', () => {
   assert(files.readme.includes('使用即视为同意'), 'README must state use implies consent');
   assert(files.readme.includes('Moonshot') && files.readme.includes('测试得分'), 'README must disclose scores are sent to Moonshot/Kimi');

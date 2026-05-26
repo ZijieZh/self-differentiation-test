@@ -73,11 +73,13 @@
     padding: 24px;
     margin-bottom: 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    cursor: pointer;
     transition: box-shadow 0.2s;
   }
   .section-card:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .section-header {
+    cursor: pointer;
   }
   .section-title {
     font-size: 18px;
@@ -252,46 +254,54 @@
   <div class="warning" id="warningBox">还有未完成的题目，请检查高亮标记的题目。</div>
 
   <div class="section-card" data-section="0">
-    <div class="section-title">
-      <span>🧠 测验1 · 情绪反应</span>
-      <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
-        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-      </button>
+    <div class="section-header">
+      <div class="section-title">
+        <span>🧠 测验1 · 情绪反应</span>
+        <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
+          <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        </button>
+      </div>
+      <div class="section-desc">共 10 题。描述你在情绪起伏时的反应模式。</div>
     </div>
-    <div class="section-desc">共 10 题。描述你在情绪起伏时的反应模式。</div>
     <div class="section-content" id="content0"><div id="quiz1"></div></div>
   </div>
 
   <div class="section-card" data-section="1">
-    <div class="section-title">
-      <span>🛡️ 测验2 · 情感切断</span>
-      <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
-        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-      </button>
+    <div class="section-header">
+      <div class="section-title">
+        <span>🛡️ 测验2 · 情感切断</span>
+        <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
+          <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        </button>
+      </div>
+      <div class="section-desc">共 12 题。描述你在亲密关系中的距离感。</div>
     </div>
-    <div class="section-desc">共 12 题。描述你在亲密关系中的距离感。</div>
     <div class="section-content" id="content1"><div id="quiz2"></div></div>
   </div>
 
   <div class="section-card" data-section="2">
-    <div class="section-title">
-      <span>🎯 测验3 · 核心自我</span>
-      <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
-        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-      </button>
+    <div class="section-header">
+      <div class="section-title">
+        <span>🎯 测验3 · 核心自我</span>
+        <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
+          <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        </button>
+      </div>
+      <div class="section-desc">共 10 题。描述你在压力下的自我稳定性。</div>
     </div>
-    <div class="section-desc">共 10 题。描述你在压力下的自我稳定性。</div>
     <div class="section-content" id="content2"><div id="quiz3"></div></div>
   </div>
 
   <div class="section-card" data-section="3">
-    <div class="section-title">
-      <span>🔗 测验4 · 人际融合</span>
-      <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
-        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-      </button>
+    <div class="section-header">
+      <div class="section-title">
+        <span>🔗 测验4 · 人际融合</span>
+        <button class="toggle-btn" type="button" aria-label="折叠" aria-expanded="true">
+          <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        </button>
+      </div>
+      <div class="section-desc">共 9 题。描述你与他人（尤其家人）的情绪融合程度。</div>
     </div>
-    <div class="section-desc">共 9 题。描述你与他人（尤其家人）的情绪融合程度。</div>
     <div class="section-content" id="content3"><div id="quiz4"></div></div>
   </div>
 
@@ -420,10 +430,8 @@ function onArrowClick(event, btn) {
   doToggle(btn.closest('.section-card'));
 }
 
-function onCardClick(event) {
-  // 点击选项区域不折叠
-  if (event.target.closest('.options') || event.target.closest('label')) return;
-  doToggle(event.currentTarget);
+function onHeaderClick(event) {
+  doToggle(event.currentTarget.closest('.section-card'));
 }
 
 function submitQuiz() {
@@ -467,8 +475,8 @@ function submitQuiz() {
 }
 
 function initializeInteractions() {
-  document.querySelectorAll('.section-card').forEach(card => {
-    card.addEventListener('click', onCardClick);
+  document.querySelectorAll('.section-header').forEach(header => {
+    header.addEventListener('click', onHeaderClick);
   });
   document.querySelectorAll('.toggle-btn').forEach(btn => {
     btn.addEventListener('click', event => onArrowClick(event, btn));
