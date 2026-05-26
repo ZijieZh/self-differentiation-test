@@ -117,7 +117,13 @@
     text-align: center;
     cursor: pointer;
   }
-  .options input[type="radio"] { display: none; }
+  .options input[type="radio"] {
+    opacity: 0;
+    position: absolute;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
   .options .opt-box {
     display: block;
     padding: 8px 4px;
@@ -301,9 +307,10 @@ function render() {
       globalIdx++;
       const opts = LABELS.map((label, li) => {
         const score = item.reverse ? (6 - li) : (li + 1);
+        const optId = `${qid}_opt_${li}`;
         return `
-          <label>
-            <input type="radio" name="${qid}" value="${score}" data-section="${sIdx}">
+          <label for="${optId}">
+            <input type="radio" id="${optId}" name="${qid}" value="${score}" data-section="${sIdx}">
             <span class="opt-box">
               ${label}
               <span class="opt-score">${score}分</span>
@@ -337,11 +344,22 @@ function submitQuiz() {
   const answered = document.querySelectorAll('input[type="radio"]:checked').length;
   if (answered < total) {
     document.getElementById('warningBox').style.display = 'block';
-    // scroll to first unanswered
-    const firstUnanswered = document.querySelector('input[type="radio"]:not(:checked)');
-    if (firstUnanswered) {
-      const wrap = firstUnanswered.closest('.question');
-      if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // find first question with no checked radio
+    let firstUnansweredWrap = null;
+    for (let sIdx = 0; sIdx < DATA.length; sIdx++) {
+      for (let i = 0; i < DATA[sIdx].items.length; i++) {
+        const qid = `q_${sIdx}_${i}`;
+        if (!document.querySelector(`input[name="${qid}"]:checked`)) {
+          firstUnansweredWrap = document.getElementById(`wrap_${qid}`);
+          break;
+        }
+      }
+      if (firstUnansweredWrap) break;
+    }
+    if (firstUnansweredWrap) {
+      firstUnansweredWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstUnansweredWrap.style.background = '#fef3c7';
+      setTimeout(() => { firstUnansweredWrap.style.background = ''; }, 1500);
     }
     return;
   }
