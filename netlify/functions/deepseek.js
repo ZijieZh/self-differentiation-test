@@ -17,12 +17,12 @@ exports.handler = async function handler(event) {
     };
   }
 
-  const apiKey = process.env.MOONSHOT_API_KEY;
+  const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
     return {
       statusCode: 500,
       headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'MOONSHOT_API_KEY is not configured' }),
+      body: JSON.stringify({ error: 'DEEPSEEK_API_KEY is not configured' }),
     };
   }
 
@@ -38,7 +38,7 @@ exports.handler = async function handler(event) {
   }
 
   try {
-    const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ exports.handler = async function handler(event) {
     return {
       statusCode: 502,
       headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Moonshot request failed' }),
+      body: JSON.stringify({ error: 'DeepSeek request failed' }),
     };
   }
 };

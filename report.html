@@ -372,7 +372,7 @@ function validateScores(value) {
 }
 
 /* ================= Deep Analysis API ================= */
-const DEEP_ANALYSIS_ENDPOINT = '/.netlify/functions/kimi';
+const DEEP_ANALYSIS_ENDPOINT = '/.netlify/functions/deepseek';
 
 function getPrompt(scores, totalScore, totalLevel) {
   const dimTexts = scores.map((s, i) => {
@@ -436,7 +436,7 @@ async function fetchDeepAnalysis(scores, totalScore, totalLevel) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'moonshot-v1-8k',
+        model: 'deepseek-v4-flash',
         messages: [
           { role: 'system', content: '你是一位专业心理咨询师，精通 Bowen 家庭系统理论。输出使用 Markdown 格式。' },
           { role: 'user', content: getPrompt(scores, totalScore, totalLevel) }
@@ -596,8 +596,8 @@ function renderReport(scores, totalScore, totalLevel, healthScore, date, deepCon
     document.getElementById('deepOutput').innerHTML = `
       <div style="background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:12px 16px;border-radius:8px;font-size:13px;line-height:1.6;">
         <strong>AI 深度分析暂时不可用</strong><br>
-        可能是网络较慢、请求超过 55 秒，或 Netlify Function 未部署 / 未配置 Moonshot API Key。<br>
-        建议：确认 Netlify 环境变量 <code>MOONSHOT_API_KEY</code> 已配置后重新部署。
+        可能是网络较慢、请求超过 55 秒，或 Netlify Function 未部署 / 未配置 DeepSeek API Key。<br>
+        建议：确认 Netlify 环境变量 <code>DEEPSEEK_API_KEY</code> 已配置后重新部署。
       </div>
     `;
   }
