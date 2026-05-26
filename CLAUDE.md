@@ -34,11 +34,11 @@ DSI 量表的特殊之处在于：**高分不代表"优秀"**，而是测量心�
 - `getLevel()` 返回维度特征描述（如"情绪反应较强"），而非"偏高/偏低"
 
 ### AI 深度分析
-`report.html` 页面加载时自动调用 Moonshot Kimi API（`api.moonshot.cn/v1/chat/completions`）：
-- API key 以 base64 编码存储，`const API_KEY = atob(API_KEY_ENC)` 解码
-- 模型固定为 `kimi-k2.6`，`temperature: 1`，`max_tokens: 4096`
-- 20 秒 fetch 超时（AbortController），超时不阻塞报告渲染
-- 从 GitHub Pages 调用可能受 CORS 限制，本地打开文件可绕过
+`report.html` 页面加载时自动调用 Netlify Function（`/.netlify/functions/kimi`），由函数代理 Moonshot Kimi API（`api.moonshot.cn/v1/chat/completions`）：
+- API key 存储在 Netlify 环境变量 `MOONSHOT_API_KEY`，不要写入前端源码
+- 模型固定为 `moonshot-v1-8k`，`temperature: 0.7`，`max_tokens: 2048`
+- 55 秒 fetch 超时（AbortController），用于适配 Netlify 同步函数执行时限
+- GitHub Pages 静态托管无法运行 Netlify Function，AI 解读应在 Netlify 部署地址测试
 
 ### 移动端关键实现
 - 选项每行 3 个：`flex: 0 0 calc(33.333% - 3px)`
@@ -62,6 +62,6 @@ git push origin master
 ## 修改注意事项
 
 1. **修改维度配置优先改 `dsi-config.js`**：维度名、满分、题数、方向集中在共享配置中；`getLevel()` 的标签和 `getPrompt()` 的评分说明仍需保持一致，避免 AI 输出与用户看到的标签矛盾。
-2. **API key 更新**：新 key 需 base64 编码后替换 `API_KEY_ENC` 的值，不要直接写明文。
+2. **API key 更新**：在 Netlify 后台更新 `MOONSHOT_API_KEY` 环境变量，不要写入前端源码。
 3. **CDN 缓存**：Chart.js 使用精确版本号 `@4.4.4`，升级时同步更新版本。
 4. **跳转参数**：`index.html` 提交后跳转带 `?v=N` 参数用于缓存清除，修改时递增版本号。
