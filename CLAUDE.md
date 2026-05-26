@@ -37,7 +37,7 @@ DSI 量表的特殊之处在于：**高分不代表"优秀"**，而是测量心�
 `report.html` 页面加载时自动调用 Moonshot Kimi API（`api.moonshot.cn/v1/chat/completions`）：
 - API key 以 base64 编码存储，`const API_KEY = atob(API_KEY_ENC)` 解码
 - 模型固定为 `kimi-k2.6`，`temperature: 1`，`max_tokens: 4096`
-- 3 分钟 fetch 超时（AbortController），超时不阻塞报告渲染
+- 20 秒 fetch 超时（AbortController），超时不阻塞报告渲染
 - 从 GitHub Pages 调用可能受 CORS 限制，本地打开文件可绕过
 
 ### 移动端关键实现

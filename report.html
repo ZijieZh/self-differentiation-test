@@ -6,10 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; connect-src https://api.moonshot.cn; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self';">
 <title>自我分化问卷（DSI）分析报告</title>
-<script src="dsi-config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --primary: #3b82f6;
@@ -228,7 +226,7 @@
 
   <div class="btn-row">
     <a class="btn" href="index.html">重新测试</a>
-    <button class="btn" id="printBtn" type="button">打印报告</button>
+    <button class="btn" onclick="window.print()">打印报告</button>
   </div>
 
   <div class="section" style="text-align:center;">
@@ -249,7 +247,6 @@
       </div>
     </div>
     <p style="font-size:14px;color:var(--text-light);">综合自我分化水平：<strong style="color:var(--primary);" id="totalLevel">--</strong></p>
-    <p style="font-size:12px;color:var(--text-light);margin-top:4px;">健康度指数：<strong id="healthScore">--</strong> / 100</p>
   </div>
 
   <div class="score-board" id="scoreBoard"></div>
@@ -260,7 +257,7 @@
       <canvas id="radarChart"></canvas>
     </div>
     <p style="font-size:12px;color:var(--text-light);text-align:center;margin-top:8px;">
-      注：ER / EC / FO 得分越低越好，IP 得分越高越好。图中 ER / EC / FO 已反向处理，IP 保持正向，以便统一观察健康度。
+      注：ER / EC / FO 得分越低越好；IP 得分越高越好。图中已将 IP 反向处理以便统一观察。
     </p>
   </div>
 
@@ -303,7 +300,12 @@
 
 <script>
 const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
-const DIM_INFO = window.DSI_DIMENSIONS;
+const DIM_INFO = [
+  { key: 'er', name: '情绪反应', full: 60, desc: 'Emotional Reactivity', lowGood: true },
+  { key: 'ec', name: '情感切断', full: 72, desc: 'Emotional Cutoff', lowGood: true },
+  { key: 'ip', name: '核心自我', full: 60, desc: 'I-Position', lowGood: false },
+  { key: 'fo', name: '人际融合', full: 54, desc: 'Fusion with Others', lowGood: true },
+];
 
 // 返回直观标签：用维度特征描述替代"偏高/偏低"，避免用户误解高分=优秀
 function getLevel(pct, lowGood, dimKey) {
@@ -323,52 +325,6 @@ function getLevel(pct, lowGood, dimKey) {
     if (pct >= 45) return { label: map.mid, cls: 'tag-yellow' };
     return { label: map.low, cls: 'tag-red' };
   }
-}
-
-function getDimensionHealth(score, info) {
-  const min = info.count;
-  const range = info.full - min;
-  const normalized = info.lowGood
-    ? (info.full - score) / range * 100
-    : (score - min) / range * 100;
-  return Math.max(0, Math.min(100, normalized));
-}
-
-function getOverallHealthScore(scores) {
-  const sum = scores.reduce((total, score, index) => {
-    return total + getDimensionHealth(score.score, DIM_INFO[index]);
-  }, 0);
-  return Math.round(sum / DIM_INFO.length);
-}
-
-function getOverallLevel(healthScore) {
-  if (healthScore >= 65) return '自我分化水平较好';
-  if (healthScore >= 45) return '自我分化水平中等';
-  return '自我分化水平待提升';
-}
-
-function validateScores(value) {
-  if (!Array.isArray(value) || value.length !== DIM_INFO.length) return null;
-
-  const normalized = [];
-  for (let i = 0; i < DIM_INFO.length; i++) {
-    const item = value[i];
-    const info = DIM_INFO[i];
-    if (!item || typeof item !== 'object') return null;
-
-    const score = Number(item.score);
-    const count = Number(item.count);
-    if (!Number.isInteger(score) || !Number.isInteger(count)) return null;
-    if (count !== info.count) return null;
-    if (score < info.count || score > info.full) return null;
-
-    normalized.push({
-      title: typeof item.title === 'string' ? item.title : info.title,
-      score,
-      count
-    });
-  }
-  return normalized;
 }
 
 /* ================= Deep Analysis API ================= */
@@ -428,7 +384,7 @@ ${dimTexts}
 
 async function fetchDeepAnalysis(scores, totalScore, totalLevel) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 180000);
+  const timeoutId = setTimeout(() => controller.abort(), 20000);
 
   try {
     const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
@@ -462,7 +418,7 @@ async function fetchDeepAnalysis(scores, totalScore, totalLevel) {
   } catch (err) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
-      console.warn('Kimi API 请求超时（3分钟）');
+      console.warn('Kimi API 请求超时（20秒）');
     } else {
       console.error('Deep analysis API error:', err);
     }
@@ -470,18 +426,8 @@ async function fetchDeepAnalysis(scores, totalScore, totalLevel) {
   }
 }
 
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, ch => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[ch]));
-}
-
 function markdownToHtml(md) {
-  let html = escapeHtml(md)
+  let html = md
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
     .replace(/^## (.*$)/gim, '<h3>$1</h3>')
     .replace(/^# (.*$)/gim, '<h3>$1</h3>')
@@ -501,12 +447,11 @@ function markdownToHtml(md) {
 }
 
 /* ================= Report Rendering ================= */
-function renderReport(scores, totalScore, totalLevel, healthScore, date, deepContent) {
+function renderReport(scores, totalScore, totalLevel, date, deepContent) {
   document.getElementById('reportDate').textContent = date;
   document.getElementById('footerDate').textContent = date;
   document.getElementById('totalScore').textContent = totalScore;
   document.getElementById('totalLevel').textContent = totalLevel;
-  document.getElementById('healthScore').textContent = healthScore;
 
   // Ring
   const totalMax = DIM_INFO.reduce((s, info) => s + info.full, 0);
@@ -562,7 +507,7 @@ function renderReport(scores, totalScore, totalLevel, healthScore, date, deepCon
       <li><strong>人际融合（FO）</strong>：得分高 = 容易被家庭情绪卷入、难以保持独立</li>
     </ul>
     <p style="font-size:13px;color:var(--text-light);line-height:1.8;margin-top:8px;">
-      因此，总分越高并不代表自我分化越好。页面中的综合水平基于统一后的健康度指数计算：ER / EC / FO 低分更健康，IP 高分更健康。
+      因此，总分越高并不代表自我分化越好，而是代表各维度特征的综合明显程度。
     </p>
   `;
   const scoreBoardEl = document.getElementById('scoreBoard');
@@ -598,8 +543,8 @@ function renderReport(scores, totalScore, totalLevel, healthScore, date, deepCon
     document.getElementById('deepOutput').innerHTML = `
       <div style="background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:12px 16px;border-radius:8px;font-size:13px;line-height:1.6;">
         <strong>AI 深度分析暂时不可用</strong><br>
-        可能是网络较慢、请求超过 3 分钟，或浏览器安全限制（CORS）导致无法调用 Kimi API。<br>
-        建议：检查网络后刷新页面并等待生成完成。
+        可能是网络问题或浏览器安全限制（CORS）导致无法调用 Kimi API。<br>
+        建议：用电脑浏览器直接打开本地 HTML 文件，或检查网络后刷新页面。
       </div>
     `;
   }
@@ -711,15 +656,10 @@ async function main() {
   const dateStr = localStorage.getItem('dsi_date');
   const date = dateStr ? new Date(dateStr).toLocaleDateString('zh-CN') : new Date().toLocaleDateString('zh-CN');
 
-  scores = validateScores(scores);
-  if (!scores) {
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;"><h2>数据已损坏</h2><p>本地存储的数据范围或结构异常，请重新完成测试。</p><a class="btn" href="index.html">前往测试</a></div>';
-    return;
-  }
-
   const totalScore = scores.reduce((s, d) => s + d.score, 0);
-  const healthScore = getOverallHealthScore(scores);
-  const totalLevel = getOverallLevel(healthScore);
+  const totalMax = DIM_INFO.reduce((s, info) => s + info.full, 0);
+  const totalPct = totalScore / totalMax;
+  const totalLevel = totalPct <= 0.45 ? '自我分化水平较好' : totalPct <= 0.55 ? '自我分化水平中等' : '自我分化水平待提升';
 
   // Fetch deep analysis first (while showing loading)
   const deepContent = await fetchDeepAnalysis(scores, totalScore, totalLevel);
@@ -729,10 +669,9 @@ async function main() {
   document.getElementById('reportContent').style.display = 'block';
 
   // Render everything at once
-  renderReport(scores, totalScore, totalLevel, healthScore, date, deepContent);
+  renderReport(scores, totalScore, totalLevel, date, deepContent);
 }
 
-document.getElementById('printBtn').addEventListener('click', () => window.print());
 main();
 </script>
 </body>
