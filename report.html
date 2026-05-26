@@ -394,7 +394,7 @@ async function fetchDeepAnalysis(scores, totalScore, totalLevel) {
           { role: 'user', content: getPrompt(scores, totalScore, totalLevel) }
         ],
         temperature: 1,
-        max_tokens: 2048,
+        max_tokens: 4096,
         stream: false
       })
     });
