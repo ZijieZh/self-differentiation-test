@@ -4,6 +4,7 @@ const fs = require('fs');
 const files = {
   index: fs.readFileSync('index.html', 'utf8'),
   report: fs.readFileSync('report.html', 'utf8'),
+  config: fs.readFileSync('dsi-config.js', 'utf8'),
   readme: fs.readFileSync('README.md', 'utf8'),
   netlifyFunction: fs.readFileSync('netlify/functions/deepseek.js', 'utf8'),
 };
@@ -32,6 +33,16 @@ test('quiz section toggle is bound only to the section header area', () => {
 test('README discloses AI data collection and consent by use', () => {
   assert(files.readme.includes('使用即视为同意'), 'README must state use implies consent');
   assert(files.readme.includes('DeepSeek') && files.readme.includes('测试得分'), 'README must disclose scores are sent to DeepSeek');
+});
+
+test('DSI score direction matches source workbook', () => {
+  assert(!files.config.includes('lowGood: true'), 'all dimensions should be interpreted as higher score = stronger differentiation resource');
+  assert(files.readme.includes('得分越高，自我分化资源越充足'), 'README must document unified high-score-is-healthier direction');
+  assert(files.report.includes('四个维度均按"得分越高，自我分化资源越充足"解释'), 'report must explain unified scoring direction');
+  assert(!files.report.includes('ER / EC / FO 得分越低越好'), 'report must not claim ER/EC/FO are low-good dimensions');
+  assert(!files.report.includes('100 - (scores[0].score / 60 * 100)'), 'radar data must not invert ER scores');
+  assert(!files.report.includes('100 - (scores[1].score / 72 * 100)'), 'radar data must not invert EC scores');
+  assert(!files.report.includes('100 - (scores[3].score / 54 * 100)'), 'radar data must not invert FO scores');
 });
 
 test('report uses Netlify Function instead of direct DeepSeek browser calls', () => {

@@ -20,18 +20,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `index.html` → `localStorage.setItem('dsi_scores')` / `localStorage.setItem('dsi_date')` → `report.html` 读取并渲染。`report.html` 无数据时显示"暂无数据"引导页。
 
 ### 计分逻辑（易混淆）
-DSI 量表的特殊之处在于：**高分不代表"优秀"**，而是测量心理特征的**明显程度**：
+源 Excel 已在每道题的选项分值中完成正向 / 反向计分转换，因此四个维度和总分均按同一方向解释：**得分越高，自我分化资源越充足**。
 
-| 维度 | 方向 | 高分含义 |
+| 维度 | 计分方式 | 高分含义 |
 |------|------|----------|
-| ER（情绪反应） | 反向 | 情绪波动大、容易被影响 |
-| EC（情感切断） | 反向 | 亲密关系中容易疏远/逃避 |
-| IP（核心自我） | **正向** | 自我认同感强、能坚持自己 |
-| FO（人际融合） | 反向 | 容易被家庭情绪卷入 |
+| ER（情绪反应） | 反向题为主 | 情绪更稳定，较不容易被外界影响 |
+| EC（情感切断） | 反向题为主 | 情感连接更好，较不容易疏远或逃避 |
+| IP（核心自我） | 正向 + 反向 | 自我认同感强、能坚持自己 |
+| FO（人际融合） | 反向题为主 | 人际边界更清晰，较不容易被家庭情绪卷入 |
 
 - 选项 0-5 映射到 1-6 分，`reverse: true` 的题目用 `(6 - index)` 计分
-- 总分 246 分，**不是越高越好**
-- `getLevel()` 返回维度特征描述（如"情绪反应较强"），而非"偏高/偏低"
+- 总分 246 分，越高代表自我分化资源越充足
+- `getLevel()` 返回维度资源描述（如"情绪较稳定"、"情感连接较好"），而非只显示"偏高/偏低"
 
 ### AI 深度分析
 `report.html` 页面加载时自动调用 Netlify Function（`/.netlify/functions/deepseek`），由函数代理 DeepSeek API（`api.deepseek.com/chat/completions`）：

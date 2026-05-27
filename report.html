@@ -260,7 +260,7 @@
       <canvas id="radarChart"></canvas>
     </div>
     <p style="font-size:12px;color:var(--text-light);text-align:center;margin-top:8px;">
-      注：ER / EC / FO 得分越低越好，IP 得分越高越好。图中 ER / EC / FO 已反向处理，IP 保持正向，以便统一观察健康度。
+      注：本问卷已在题目层面完成正向/反向计分转换，四个维度均按"得分越高，自我分化资源越充足"解释。
     </p>
   </div>
 
@@ -305,13 +305,13 @@
 const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#8b5cf6'];
 const DIM_INFO = window.DSI_DIMENSIONS;
 
-// 返回直观标签：用维度特征描述替代"偏高/偏低"，避免用户误解高分=优秀
+// 返回直观标签：四个维度的计分键已统一为高分代表分化资源更充足。
 function getLevel(pct, lowGood, dimKey) {
   const labels = {
-    er: { low: '情绪较稳定', mid: '情绪反应中等', high: '情绪反应较强' },
-    ec: { low: '情感连接较好', mid: '情感距离中等', high: '情感距离较大' },
+    er: { low: '情绪稳定待提升', mid: '情绪稳定中等', high: '情绪较稳定' },
+    ec: { low: '情感切断较明显', mid: '情感连接中等', high: '情感连接较好' },
     ip: { low: '核心自我待提升', mid: '核心自我中等', high: '核心自我较强' },
-    fo: { low: '人际边界清晰', mid: '人际融合中等', high: '人际融合较强' }
+    fo: { low: '人际融合较强', mid: '人际边界中等', high: '人际边界清晰' }
   };
   const map = labels[dimKey] || labels.er;
   if (lowGood) {
@@ -378,9 +378,10 @@ function getPrompt(scores, totalScore, totalLevel) {
   const dimTexts = scores.map((s, i) => {
     const info = DIM_INFO[i];
     const pct = (s.score / info.full * 100).toFixed(1);
-    const lvl = getLevel(parseFloat(pct), info.lowGood, info.key).label;
+    const health = getDimensionHealth(s.score, info);
+    const lvl = getLevel(health, info.lowGood, info.key).label;
     const direction = info.lowGood ? '得分越低越好' : '得分越高越好';
-    return `${info.name}（${info.desc}）：${s.score}/${info.full}（${pct}%，${direction}）—— 水平：${lvl}`;
+    return `${info.name}（${info.desc}）：${s.score}/${info.full}（原始占比 ${pct}%，健康度 ${health.toFixed(1)}%，${direction}）—— 水平：${lvl}`;
   }).join('\n');
 
   return `你是一位专业的心理咨询师，精通 Bowen 家庭系统理论和自我分化（Differentiation of Self）概念。请根据以下自我分化问卷（DSI）的测试结果，生成一份温暖、专业、个性化的中文分析报告。
@@ -393,10 +394,11 @@ ${dimTexts}
 
 ## 评分说明
 
-- 情绪反应（ER，10题）：得分越低，说明情绪越稳定，不易被外界刺激左右
-- 情感切断（EC，12题）：得分越低，说明越能在亲密关系中保持健康的情感连接，而非逃避或疏远
+- 本问卷已在题目层面完成正向/反向计分转换，四个维度均按"得分越高，自我分化资源越充足"解释。
+- 情绪反应（ER，10题）：得分越高，说明越能保持情绪稳定，不易被外界刺激左右
+- 情感切断（EC，12题）：得分越高，说明越能在亲密关系中保持情感连接，而非逃避或疏远
 - 核心自我（IP，10题）：得分越高，说明自我认同感越强，能在压力下坚持自我
-- 人际融合（FO，9题）：得分越低，说明越能保持独立自我，不易被家庭系统的情绪卷入
+- 人际融合（FO，9题）：得分越高，说明越能保持独立边界，不易被家庭系统的情绪卷入
 
 ## 输出要求
 
@@ -520,7 +522,8 @@ function renderReport(scores, totalScore, totalLevel, healthScore, date, deepCon
   document.getElementById('scoreBoard').innerHTML = scores.map((s, i) => {
     const info = DIM_INFO[i];
     const pct = (s.score / info.full * 100).toFixed(1);
-    const lvl = getLevel(parseFloat(pct), info.lowGood, info.key);
+    const health = getDimensionHealth(s.score, info);
+    const lvl = getLevel(health, info.lowGood, info.key);
     return `
       <div class="score-card" style="border-top-color:${COLORS[i]};">
         <div class="label">测验${i+1} · ${info.name}</div>
@@ -534,7 +537,8 @@ function renderReport(scores, totalScore, totalLevel, healthScore, date, deepCon
   document.getElementById('detailTable').innerHTML = scores.map((s, i) => {
     const info = DIM_INFO[i];
     const pct = (s.score / info.full * 100).toFixed(1);
-    const lvl = getLevel(parseFloat(pct), info.lowGood, info.key);
+    const health = getDimensionHealth(s.score, info);
+    const lvl = getLevel(health, info.lowGood, info.key);
     return `<tr>
       <td>测验${i+1} · ${info.name}（${info.desc}）</td>
       <td>${s.count}</td>
@@ -551,32 +555,32 @@ function renderReport(scores, totalScore, totalLevel, healthScore, date, deepCon
   scoringNote.innerHTML = `
     <h2><span class="icon">📝</span>计分说明</h2>
     <p style="font-size:13px;color:var(--text-light);line-height:1.8;">
-      本量表采用特殊计分方式，<strong>高分不代表"优秀"</strong>。DSI 量表测量的是心理特征的<strong>明显程度</strong>：
+      本量表已在题目层面完成正向/反向计分转换，四个维度均按<strong>得分越高，自我分化资源越充足</strong>解释：
     </p>
     <ul style="font-size:13px;color:var(--text-light);margin-left:20px;line-height:1.8;">
-      <li><strong>情绪反应（ER）</strong>：得分高 = 情绪波动大、容易被外界影响</li>
-      <li><strong>情感切断（EC）</strong>：得分高 = 在亲密关系中容易疏远、逃避</li>
-      <li><strong>核心自我（IP）</strong>：得分高 = 自我认同感强、能坚持自己（唯一正向维度）</li>
-      <li><strong>人际融合（FO）</strong>：得分高 = 容易被家庭情绪卷入、难以保持独立</li>
+      <li><strong>情绪反应（ER）</strong>：得分高 = 情绪更稳定，较不容易被外界影响</li>
+      <li><strong>情感切断（EC）</strong>：得分高 = 情感连接更好，较不容易疏远或逃避</li>
+      <li><strong>核心自我（IP）</strong>：得分高 = 自我认同感强，能坚持自己</li>
+      <li><strong>人际融合（FO）</strong>：得分高 = 人际边界更清晰，较不容易被家庭情绪卷入</li>
     </ul>
     <p style="font-size:13px;color:var(--text-light);line-height:1.8;margin-top:8px;">
-      因此，总分越高并不代表自我分化越好。页面中的综合水平基于统一后的健康度指数计算：ER / EC / FO 低分更健康，IP 高分更健康。
+      因此，总分和各维度健康度指数均按同一方向阅读：分数越高，代表自我分化水平越稳定。
     </p>
   `;
   const scoreBoardEl = document.getElementById('scoreBoard');
   scoreBoardEl.parentNode.insertBefore(scoringNote, scoreBoardEl);
 
   // Dim analysis
-  const erLvl = getLevel(scores[0].score/60*100, true, 'er').label;
-  const ecLvl = getLevel(scores[1].score/72*100, true, 'ec').label;
-  const ipLvl = getLevel(scores[2].score/60*100, false, 'ip').label;
-  const foLvl = getLevel(scores[3].score/54*100, true, 'fo').label;
+  const erLvl = getLevel(getDimensionHealth(scores[0].score, DIM_INFO[0]), DIM_INFO[0].lowGood, 'er').label;
+  const ecLvl = getLevel(getDimensionHealth(scores[1].score, DIM_INFO[1]), DIM_INFO[1].lowGood, 'ec').label;
+  const ipLvl = getLevel(getDimensionHealth(scores[2].score, DIM_INFO[2]), DIM_INFO[2].lowGood, 'ip').label;
+  const foLvl = getLevel(getDimensionHealth(scores[3].score, DIM_INFO[3]), DIM_INFO[3].lowGood, 'fo').label;
 
   const analysisTexts = [
-    `你的<strong>${erLvl}</strong>。在平静状态下你能较好地管理情绪，但当面对亲近的人的批评或冲突时，情绪仍可能快速上头，影响理性判断。这不是"脆弱"，而是大脑的情绪警报系统比较敏感。`,
-    `你的<strong>${ecLvl}</strong>。当他人靠得太近时，你会本能地想逃。你重视个人空间和独立性，这本身不是问题，但如果每次感到压力就选择疏远，可能会让亲密关系难以深入。`,
-    `你的<strong>${ipLvl}</strong>。核心自我反映的是"无论外界怎么评价，我都知道自己是谁"的能力。你在压力下尚能保持一定的自我认知，但在坚持自己认为正确的事、不被他人眼光左右方面，还有成长空间。`,
-    `你的<strong>${foLvl}</strong>。你对家庭关系和亲密关系投入很深，容易为家人操心，家庭冲突会明显牵动你的情绪。这体现了你的责任感，但也意味着你的情绪边界容易被家庭系统渗透。`
+    `你的<strong>${erLvl}</strong>。这个维度分数越高，代表越能在压力和关系刺激下保持情绪稳定；分数偏低时，则提示情绪更容易被外界或亲近关系牵动。`,
+    `你的<strong>${ecLvl}</strong>。这个维度分数越高，代表越能在亲密关系中保持连接并表达感受；分数偏低时，则提示遇到压力时更容易疏远、回避或切断情感互动。`,
+    `你的<strong>${ipLvl}</strong>。核心自我反映的是"无论外界怎么评价，我都知道自己是谁"的能力。分数越高，越能在压力下坚持自己的判断和边界。`,
+    `你的<strong>${foLvl}</strong>。这个维度分数越高，代表越能保持清晰人际边界；分数偏低时，则提示更容易被家庭系统和亲密关系的情绪卷入。`
   ];
   document.getElementById('dimAnalysis').innerHTML = scores.map((s, i) => {
     const info = DIM_INFO[i];
@@ -603,17 +607,17 @@ function renderReport(scores, totalScore, totalLevel, healthScore, date, deepCon
   }
 
   // Comprehensive
-  const erCls = getLevel(scores[0].score/60*100, true, 'er').cls;
-  const ecCls = getLevel(scores[1].score/72*100, true, 'ec').cls;
-  const ipCls = getLevel(scores[2].score/60*100, false, 'ip').cls;
-  const foCls = getLevel(scores[3].score/54*100, true, 'fo').cls;
+  const erCls = getLevel(getDimensionHealth(scores[0].score, DIM_INFO[0]), DIM_INFO[0].lowGood, 'er').cls;
+  const ecCls = getLevel(getDimensionHealth(scores[1].score, DIM_INFO[1]), DIM_INFO[1].lowGood, 'ec').cls;
+  const ipCls = getLevel(getDimensionHealth(scores[2].score, DIM_INFO[2]), DIM_INFO[2].lowGood, 'ip').cls;
+  const foCls = getLevel(getDimensionHealth(scores[3].score, DIM_INFO[3]), DIM_INFO[3].lowGood, 'fo').cls;
 
   // 找出需要关注的维度（标红或标黄的）
   const concerns = [];
   if (erCls === 'tag-red' || erCls === 'tag-yellow') concerns.push(`情绪反应${erLvl}`);
-  if (ecCls === 'tag-red' || ecCls === 'tag-yellow') concerns.push(`情感距离${ecLvl}`);
+  if (ecCls === 'tag-red' || ecCls === 'tag-yellow') concerns.push(`情感连接${ecLvl}`);
   if (ipCls === 'tag-red' || ipCls === 'tag-yellow') concerns.push(`核心自我${ipLvl}`);
-  if (foCls === 'tag-red' || foCls === 'tag-yellow') concerns.push(`人际融合${foLvl}`);
+  if (foCls === 'tag-red' || foCls === 'tag-yellow') concerns.push(`人际边界${foLvl}`);
 
   // 找出表现较好的维度
   const strengths = [];
@@ -657,14 +661,14 @@ function renderReport(scores, totalScore, totalLevel, healthScore, date, deepCon
   new Chart(ctx, {
     type: 'radar',
     data: {
-      labels: ['情绪反应\n(越低越好)', '情感切断\n(越低越好)', '核心自我\n(越高越好)', '人际融合\n(越低越好)'],
+      labels: ['情绪反应\n(越高越好)', '情感切断\n(越高越好)', '核心自我\n(越高越好)', '人际融合\n(越高越好)'],
       datasets: [{
         label: '健康度指数',
         data: [
-          100 - (scores[0].score / 60 * 100),
-          100 - (scores[1].score / 72 * 100),
-          (scores[2].score / 60 * 100),
-          100 - (scores[3].score / 54 * 100)
+          getDimensionHealth(scores[0].score, DIM_INFO[0]),
+          getDimensionHealth(scores[1].score, DIM_INFO[1]),
+          getDimensionHealth(scores[2].score, DIM_INFO[2]),
+          getDimensionHealth(scores[3].score, DIM_INFO[3])
         ],
         backgroundColor: 'rgba(102, 126, 234, 0.2)',
         borderColor: '#667eea',
