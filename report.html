@@ -8,6 +8,20 @@
 <meta http-equiv="Expires" content="0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; connect-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self';">
 <title>自我分化问卷（DSI）分析报告</title>
+<script>
+  // 版本检测：如果缓存版本与当前版本不符，通过 URL 参数强制刷新
+  (function() {
+    const APP_VERSION = '3';
+    const stored = localStorage.getItem('dsi_app_version');
+    if (stored !== APP_VERSION) {
+      localStorage.setItem('dsi_app_version', APP_VERSION);
+      var url = location.href.split('?')[0];
+      if (!location.search.includes('_cache=')) {
+        location.replace(url + '?_cache=' + Date.now());
+      }
+    }
+  })();
+</script>
 <script src="dsi-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
 <style>
